@@ -1,16 +1,31 @@
 #include <vector>
 using namespace std;
 
-std::vector<void(*)()> actions; // do we need to accomodate different units - buildings?
-std::vector<vector<void(*)()>> features; // k vectors each containing |actions| features
-std::vector<vector<double>> weights; // feature weights
+/* Given a starting state, a set of actions and features, run GQ and return the feature weights. 
+   features is composed of |actions| vectors each containing k features.
+*/
+vector<vector<double>> QFunctionApproximation(void(*) startState, vector<void(*)()> actions, vector<vector<void(*)()>> features) {
+	double learningRate = 0.01;
+	double discount = 0.9;
+	int numActions = actions.size();
+	int maxIter = 100; // how many games to run
+	vector<vector<double>> weights; // FILL WITH ONES (dim: |actions| x k+1)
+	// Load / save feature weights to resume training?
 
-double learningRate = 0.01;
-double discount = 0.9;
+	for (int i = 0; i < maxIter; i++) {
+		void(*) state = startState; // not sure about state representation
+		while (!gameFinished) { // find actual code for this
+			void(*)() action = select_action(state, numActions, weights, features);
+			void(*) newState = game.takeAction(state, action);
+			weights = update_weights(state, action, newState, weights, featuers, simulator, learningRate, discount);
+			state = newState;
+		}
+	}
 
+	return weights;
+}
 /*
 Select an action index in a state using an e-greedy algorithm.
-CHECK TYPES.
 */
 int selectAction(void(*) state, vector<void(*)()> actions, 
 	vector<vector<double>> weights, vector<vector<void(*)()>> features) {
