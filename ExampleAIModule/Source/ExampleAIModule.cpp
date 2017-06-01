@@ -103,7 +103,7 @@ void ExampleAIModule::onFrame()
 
 
     // Finally make the unit do some stuff!
-
+    
 
     // If the unit is a worker unit
     if ( u->getType().isWorker() )
@@ -120,7 +120,20 @@ void ExampleAIModule::onFrame()
 		  bool(*attack_i)(Unit, Unit);
 		  attack_i = &attackUnit;
 		  actions.push_back(attack_i);
+	      	  
+	      	  //Change return type of statefunction this in QFN.cpp or make a template
+	      	  bool(*) startState;
+	      	  startState = &u->isUnderAttack();
 		  
+	          //Revise syntax
+	          vector<vector<void(*)()>> features;
+	          int(*) unitHP;
+	          unitHP = &u->getHitPoints();
+	          features.push_back(unitHP);
+	      
+	          //Call Qfn
+	          vector<vector<double>> QFunctionApproximation(startState, actions, features);
+	      
 		// If we have enough resources, build a bunker as close as possible. assume Terran.
 		std::cout << Broodwar->getBuildLocation(UnitTypes::Enum::Terran_Barracks, u->getTilePosition()) << std::endl;
 	    u->build(UnitTypes::Enum::Terran_Barracks, Broodwar->getBuildLocation(UnitTypes::Enum::Terran_Barracks, u->getTilePosition()));
