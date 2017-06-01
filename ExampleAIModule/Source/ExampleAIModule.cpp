@@ -59,11 +59,7 @@ void ExampleAIModule::onEnd(bool isWinner)
   }
 }
 
-//Wrapper function for attacking unit
-bool attackUnit(Unit u, Unit target)
-{
-	u->attack(target);
-}
+
 void ExampleAIModule::onFrame()
 {
   // Called once every game frame
@@ -110,30 +106,7 @@ void ExampleAIModule::onFrame()
     {
       // if our worker is idle
       if ( u->isIdle() )
-      {
-
-		  std::vector<bool(*)(Unit, Unit)> actions;
-		  Unitset targets = u->getUnitsInRadius(5);	//TODO: figure out optimal radius
-		  Broodwar << targets << std::endl;
-
-		  Unit target = targets.getClosestUnit(Broodwar->self()->getStartLocation());
-		  bool(*attack_i)(Unit, Unit);
-		  attack_i = &attackUnit;
-		  actions.push_back(attack_i);
-	      	  
-	      	  //Change return type of statefunction this in QFN.cpp or make a template
-	      	  bool(*) startState;
-	      	  startState = &u->isUnderAttack();
-		  
-	          //Revise syntax
-	          vector<vector<void(*)()>> features;
-	          int(*) unitHP;
-	          unitHP = &u->getHitPoints();
-	          features.push_back(unitHP);
-	      
-	          //Call Qfn
-	          vector<vector<double>> QFunctionApproximation(startState, actions, features);
-	      
+      {  
 		// If we have enough resources, build a bunker as close as possible. assume Terran.
 		std::cout << Broodwar->getBuildLocation(UnitTypes::Enum::Terran_Barracks, u->getTilePosition()) << std::endl;
 	    u->build(UnitTypes::Enum::Terran_Barracks, Broodwar->getBuildLocation(UnitTypes::Enum::Terran_Barracks, u->getTilePosition()));

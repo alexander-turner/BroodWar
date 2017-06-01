@@ -71,24 +71,28 @@ int main(int argc, const char* argv[])
       Unitset minerals  = Broodwar->getMinerals();
       for ( auto &u : units )
       {
-        if ( u->getType().isWorker() )
-        {
-          Unit closestMineral = nullptr;
+		  std::vector<bool(*)(Unit, Unit)> actions;
+		  Unitset targets = u->getUnitsInRadius(5);	//TODO: figure out optimal radius + enemies
+		  Broodwar << targets << std::endl;
 
-          for (auto &m : minerals)
-          {
-            if ( !closestMineral || u->getDistance(m) < u->getDistance(closestMineral))
-              closestMineral = m;
-          }
-          if ( closestMineral )
-            u->rightClick(closestMineral);
-        }
-        else if ( u->getType().isResourceDepot() )
-        {
-          //if this is a center, tell it to build the appropiate type of worker
-          u->train(Broodwar->self()->getRace().getWorker());
-        }
-		else {
+		  Unit target = targets.getClosestUnit(Broodwar->self()->getStartLocation());
+		  bool(*attack_i)(Unit, Unit);
+		  attack_i = &attackUnit;
+		  actions.push_back(attack_i);
+
+		  //Change return type of statefunction this in QFN.cpp or make a template
+		  bool(*) startState;
+		  startState = &u->isUnderAttack();
+
+		  //Revise syntax
+		  vector<vector<void(*)()>> features;
+		  int(*) unitHP;
+		  unitHP = &u->getHitPoints();
+		  features.push_back(unitHP);
+
+		  //Call Qfn
+		  vector<vector<double>> QFunctionApproximation(startState, actions, features);
+
 			Unitset enemies = Broodwar->enemy()->getUnits();
 			/*std::vector<void(*)()> actions;
 			// Enumerate available actions
@@ -99,8 +103,6 @@ int main(int argc, const char* argv[])
 			// Naive closest-attack
 			Unit firstEnemy = enemies.getClosestUnit();
 			u->attack(firstEnemy);
-			
-		}
       }
     }
     while(Broodwar->isInGame())
@@ -225,6 +227,8 @@ int main(int argc, const char* argv[])
   std::cin.ignore();
   return 0;
 }
+
+
 
 void drawStats()
 {
