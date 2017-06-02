@@ -65,12 +65,10 @@ int main(int argc, const char* argv[])
     {
       if (Broodwar->enemy())
         Broodwar << "The match up is " << Broodwar->self()->getRace() << " vs " << Broodwar->enemy()->getRace() << std::endl;
-
-      //send each worker to the mineral field that is closest to it
       Unitset units    = Broodwar->self()->getUnits();
-      Unitset minerals  = Broodwar->getMinerals();
       for ( auto &u : units )
       {
+		  /*
 		  std::vector<bool(*)(Unit, Unit)> actions;
 		  Unitset targets = u->getUnitsInRadius(5);	//TODO: figure out optimal radius + enemies
 		  Broodwar << targets << std::endl;
@@ -91,18 +89,8 @@ int main(int argc, const char* argv[])
 		  features.push_back(unitHP);
 
 		  //Call Qfn
-		  vector<vector<double>> QFunctionApproximation(startState, actions, features);
+		  vector<vector<double>> QFunctionApproximation(startState, actions, features);*/
 
-			Unitset enemies = Broodwar->enemy()->getUnits();
-			/*std::vector<void(*)()> actions;
-			// Enumerate available actions
-			for (auto &enemy : enemies); {
-				actions(1) = 
-			}*/
-			
-			// Naive closest-attack
-			Unit firstEnemy = enemies.getClosestUnit();
-			u->attack(firstEnemy);
       }
     }
     while(Broodwar->isInGame())
