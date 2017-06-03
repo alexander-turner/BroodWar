@@ -1,25 +1,51 @@
 #include <vector>
-using namespace std;
+#include <iostream>
+using namespace BWAPI;
 
 /* Given a starting state, a set of actions and features, run GQ and return the feature weights. 
-   features is composed of |actions| vectors each containing k features.
+   features is composed of |actions| vectors each containing k features. Optional filepath parameter allows for loading and saving weights.
 */
-vector<vector<double>> QFunctionApproximation(void(*) startState, vector<void(*)()> actions, vector<vector<void(*)()>> features) {
+vector<vector<double>> QFunctionApproximation(vector<void(*)()> actions, vector<vector<void(*)()>> features, String filepath = NULL) {
 	double learningRate = 0.01;
 	double discount = 0.9;
 	int numActions = actions.size();
-	int maxIter = 100; // how many games to run
+	int maxIter = 100; 
 	vector<vector<double>> weights; // FILL WITH ONES (dim: |actions| x k+1)
-	// Load / save feature weights to resume training?
 
-	for (int i = 0; i < maxIter; i++) {
-		void(*) state = startState; // not sure about state representation
-		while (!gameFinished) { // find actual code for this
-			void(*)() action = select_action(state, numActions, weights, features);
-			void(*) newState = game.takeAction(state, action);
-			weights = update_weights(state, action, newState, weights, featuers, simulator, learningRate, discount);
-			state = newState;
+	if (filepath) {
+		ifstream input_file(filePath); // check that this works. also, expand for actions / features?
+		double tempVar;
+		while (input_file >> tempVar)
+		{
+			weights.push_back(tempVar);
 		}
+	}
+
+	// Run maxIter games
+	for (int i = 0; i < maxIter; i++) {
+		Unitset units = Broodwar->self()->getUnits();
+		Unitset enemies = Broodwar->enemy()->getUnits();
+		while (Broodwar->isInGame) { // move this to onframe?
+			double lastHPDiff = getHPDiff(units, enemies);
+			for (auto &u : units) { // Calculate action for each unit
+				if (!u->exists())
+					continue;
+				void(*)() action = select_action(u, actions, weights, features);
+				u.takeAction(state, action);
+			}
+			double newHPDiff = getHPDiff(units, enemies);
+			double reward = newHPDiff - lastHPDiff; // potential issue: doesn't allow for differentiation of action quality. also how to normalize for bad situations?
+
+			weights = update_weights(action, weights, features, reward, learningRate, discount);
+		}
+		Broodwar->restartGame();
+	}
+
+	if (filepath) {
+		ofstream file;
+		file.open(filepath);
+		file << weights;
+		file.close();
 	}
 
 	return weights;
@@ -27,10 +53,10 @@ vector<vector<double>> QFunctionApproximation(void(*) startState, vector<void(*)
 /*
 Select an action index in a state using an e-greedy algorithm.
 */
-int selectAction(void(*) state, vector<void(*)()> actions, 
-	vector<vector<double>> weights, vector<vector<void(*)()>> features) {
+int selectAction(Unit u, vector<void(*)()> actions, vector<vector<double>> weights,
+		vector<vector<void(*)()>> features) {
 	double epsilon = 0.5; // probability of choosing non-greedy action
-	int greedyAction = selectGreedyAction(state, actions, weights, features);
+	int greedyAction = selectGreedyAction(u, actions, weights, features);
 	int action = greedyAction;
 	if ((((double) rand() % 100) / 100) <= epsilon) // CHECK does division work here?
 		while (action == greedy) 
@@ -59,11 +85,11 @@ int selectGreedyAction(void(*) state, vector<void(*)()> actions,
 /*
 Perform TD update for each parameter after taking given action.
 */
-vector<vector<double>> updateWeights(void(*) state, vector<void(*)()> actions, int actionInd, void(*) newState, 
-	vector<vector<double>> weights, vector<vector<void(*)()>> features, double learningRate, double discount) {
+vector<vector<double>> updateWeights(vector<void(*)()> actions, int actionInd, vector<vector<double>> weights, 
+		vector<vector<void(*)()>> features, double reward, double learningRate, double discount) {
 	int greedyAction = selectGreedyAction(newState, actions, weights, features); 
 	for (int i = 0; i < weights.size(); i++) {
-		double noisyGradient = reward(state) + discount*estimateQ(newState, actions, greedyAction, weights, features) - estimateQ(state, action, weights, features);
+		double noisyGradient = reward + discount*estimateQ(newState, actions, greedyAction, weights, features) - estimateQ(state, action, weights, features);
 		noisyGradient *= learningRate;
 		if (i == 0)
 			weights[i][actionInd] += noisyGradient;
