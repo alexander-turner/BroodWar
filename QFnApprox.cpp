@@ -13,7 +13,7 @@ vector<vector<double>> QFunctionApproximation(vector<void(*)()> actions, vector<
 	vector<vector<double>> weights; // FILL WITH ONES (dim: |actions| x k+1)
 
 	if (filepath) {
-		ifstream input_file(filePath); // check that this works. also, expand for actions / features?
+		std::ifstream input_file(filePath); // check that this works. also, expand for actions / features?
 		double tempVar;
 		while (input_file >> tempVar)
 		{
@@ -27,6 +27,11 @@ vector<vector<double>> QFunctionApproximation(vector<void(*)()> actions, vector<
 		Unitset enemies = Broodwar->enemy()->getUnits();
 		while (Broodwar->isInGame) { // move this to onframe?
 			double lastHPDiff = getHPDiff(units, enemies);
+			/*
+			StateInformation = {current_unit, friendlies, enemies, orders}
+			Keep a copy of last StateInformation so we can update weights
+			When do we update weights?
+			*/
 			for (auto &u : units) { // Calculate action for each unit
 				if (!u->exists())
 					continue;
@@ -42,7 +47,7 @@ vector<vector<double>> QFunctionApproximation(vector<void(*)()> actions, vector<
 	}
 
 	if (filepath) {
-		ofstream file;
+		std::ofstream file;
 		file.open(filepath);
 		file << weights;
 		file.close();
@@ -58,7 +63,7 @@ int selectAction(Unit u, vector<void(*)()> actions, vector<vector<double>> weigh
 	double epsilon = 0.5; // probability of choosing non-greedy action
 	int greedyAction = selectGreedyAction(u, actions, weights, features);
 	int action = greedyAction;
-	if ((((double) rand() % 100) / 100) <= epsilon) // CHECK does division work here?
+	if ((double) std::rand() / (RAND_MAX) <= epsilon)
 		while (action == greedy) 
 			action = rand() % actions.size();
 	return action;
@@ -89,7 +94,7 @@ vector<vector<double>> updateWeights(vector<void(*)()> actions, int actionInd, v
 		vector<vector<void(*)()>> features, double reward, double learningRate, double discount) {
 	int greedyAction = selectGreedyAction(newState, actions, weights, features); 
 	for (int i = 0; i < weights.size(); i++) {
-		double noisyGradient = reward + discount*estimateQ(newState, actions, greedyAction, weights, features) - estimateQ(state, action, weights, features);
+		double noisyGradient = reward + discount*estimateQ(newState, actions, greedyAction, weights, features) - estimateQ(state, actions, action, weights, features); // check which index to pass in
 		noisyGradient *= learningRate;
 		if (i == 0)
 			weights[i][actionInd] += noisyGradient;

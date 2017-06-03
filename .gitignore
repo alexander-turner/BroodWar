@@ -13,3 +13,13 @@
 /MPQDraft
 /Release
 /Shared
+*.lnk
+*.pdb
+*.pdb
+*.map
+*.snp
+*.dll
+*.ini
+*.pdb
+*.pdb
+*.vcxproj
