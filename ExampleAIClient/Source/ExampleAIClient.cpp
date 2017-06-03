@@ -1,11 +1,10 @@
 #include <BWAPI.h>
 #include <BWAPI/Client.h>
-
 #include <iostream>
 #include <thread>
 #include <chrono>
 #include <string>
-
+#include "/Program Files (x86)//BWAPI/functionWrappers.h"
 using namespace BWAPI;
 
 void drawStats();
@@ -26,7 +25,13 @@ void reconnect()
 
 int main(int argc, const char* argv[])
 {
-  std::cout << "Connecting..." << std::endl;;
+	Functions f;
+	std::vector <double(*) (StateInfo)> actionVector;
+	  std::cout << "Connecting..." << std::endl;
+	  actionVector = f.getActions();
+	  StateInfo currState;
+	  StateInfo prevState;
+
   reconnect();
   while(true)
   {
@@ -65,37 +70,23 @@ int main(int argc, const char* argv[])
     {
       if (Broodwar->enemy())
         Broodwar << "The match up is " << Broodwar->self()->getRace() << " vs " << Broodwar->enemy()->getRace() << std::endl;
-      Unitset units    = Broodwar->self()->getUnits();
-      for ( auto &u : units )
-      {
-		  /*
-		  std::vector<bool(*)(Unit, Unit)> actions;
-		  Unitset targets = u->getUnitsInRadius(5);	//TODO: figure out optimal radius + enemies
-		  Broodwar << targets << std::endl;
 
-		  Unit target = targets.getClosestUnit(Broodwar->self()->getStartLocation());
-		  bool(*attack_i)(Unit, Unit);
-		  attack_i = &attackUnit;
-		  actions.push_back(attack_i);
-
-		  //Change return type of statefunction this in QFN.cpp or make a template
-		  bool(*) startState;
-		  startState = &u->isUnderAttack();
-
-		  //Revise syntax
-		  vector<vector<void(*)()>> features;
-		  int(*) unitHP;
-		  unitHP = &u->getHitPoints();
-		  features.push_back(unitHP);
-
-		  //Call Qfn
-		  vector<vector<double>> QFunctionApproximation(startState, actions, features);*/
-
-      }
     }
+	Unitset units = Broodwar->self()->getUnits();
+	Unit e = Broodwar->getClosestUnit(Positions::Origin, Filter::IsEnemy);
     while(Broodwar->isInGame())
     {
-      for(auto &e : Broodwar->getEvents())
+		for (auto &u : units) {
+
+			
+			if (u != NULL) {
+				currState.currentUnit = u;
+				currState.target = Broodwar->getClosestUnit(Positions::Origin, Filter::IsEnemy);
+				actionVector.at(0)(currState);
+				
+			}
+		}
+      /*for(auto &e : Broodwar->getEvents())
       {
         switch(e.getType())
         {
@@ -157,7 +148,7 @@ int main(int argc, const char* argv[])
             break;
           case EventType::UnitDestroy:
             if (!Broodwar->isReplay())
-              Broodwar->sendText("A %s [%p] has been destroyed at (%d,%d)",e.getUnit()->getType().c_str(), e.getUnit(), e.getUnit()->getPosition().x, e.getUnit()->getPosition().y);
+              //Broodwar->sendText("A %s [%p] has been destroyed at (%d,%d)",e.getUnit()->getType().c_str(), e.getUnit(), e.getUnit()->getPosition().x, e.getUnit()->getPosition().y);
             break;
           case EventType::UnitMorph:
             if (!Broodwar->isReplay())
@@ -191,7 +182,7 @@ int main(int argc, const char* argv[])
             Broodwar->sendText("The game was saved to \"%s\".", e.getText().c_str());
             break;
         }
-      }
+      }*/
 
       if (show_bullets)
         drawBullets();
