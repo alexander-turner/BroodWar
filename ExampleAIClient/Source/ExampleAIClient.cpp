@@ -71,7 +71,7 @@ int main(int argc, const char* argv[])
       Unitset minerals  = Broodwar->getMinerals();
       for ( auto &u : units )
       {
-		  std::vector<bool(*)(Unit, Unit)> actions;
+		  /*std::vector<bool(*)(Unit, Unit)> actions;
 		  Unitset targets = u->getUnitsInRadius(5);	//TODO: figure out optimal radius + enemies
 		  Broodwar << targets << std::endl;
 
@@ -101,12 +101,39 @@ int main(int argc, const char* argv[])
 			}*/
 			
 			// Naive closest-attack
-			Unit firstEnemy = enemies.getClosestUnit();
-			u->attack(firstEnemy);
+			//Unit firstEnemy = enemies.getClosestUnit();
+			//u->attack(firstEnemy);
       }
     }
     while(Broodwar->isInGame())
     {
+		Broodwar->sendText("Test text");
+		Unitset units = Broodwar->self()->getUnits();
+		Unit u;
+		u = Broodwar->getClosestUnit(Positions::Origin, Filter::IsOwned);
+		Unitset enemies = Broodwar->enemy()->getUnits();
+		Unit firstEnemy = enemies.getClosestUnit();
+		for(auto &u: units)
+		{
+			u->attack(firstEnemy);
+			Broodwar->sendText("[%s] attcking", u->getType().c_str());
+			for (auto &e : enemies)
+			{	if (firstEnemy->isUnderAttack() == NULL)
+					Broodwar->sendText("Under attack returns null");
+				else
+					Broodwar->sendText("%s", firstEnemy->isUnderAttack());
+
+				if (e->isUnderAttack())
+				{
+					Broodwar->sendText("[%s] under attack", e->getType().c_str());
+					e->move(Positions::Origin);
+					Broodwar->sendText("[%s] fleeing", e->getType().c_str());
+				}
+
+			}
+		}
+
+
       for(auto &e : Broodwar->getEvents())
       {
         switch(e.getType())

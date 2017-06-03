@@ -80,6 +80,7 @@ void ExampleAIModule::onFrame()
   // Iterate through all the units that we own
   for (auto &u : Broodwar->self()->getUnits())
   {
+	  Broodwar->sendText("from ai module [%s]", u->getType().c_str());
     // Ignore the unit if it no longer exists
     // Make sure to include this block when handling any Unit pointer!
     if ( !u->exists() )
@@ -107,6 +108,7 @@ void ExampleAIModule::onFrame()
       // if our worker is idle
       if ( u->isIdle() )
       {  
+		  
 		// If we have enough resources, build a bunker as close as possible. assume Terran.
 		std::cout << Broodwar->getBuildLocation(UnitTypes::Enum::Terran_Barracks, u->getTilePosition()) << std::endl;
 	    u->build(UnitTypes::Enum::Terran_Barracks, Broodwar->getBuildLocation(UnitTypes::Enum::Terran_Barracks, u->getTilePosition()));
