@@ -72,23 +72,26 @@ int selectAction(StateInfo state, std::vector <double(*) (StateInfo)> actions, s
 }
 
 /*
-Returns index of greedy action according to state, weights, and features.
+Returns index of greedy action according to state, weights, and features and modifies unit target to the best found for that action.
 */
 int selectGreedyAction(StateInfo state, int numActions, std::vector<std::vector<double>> weights, 
 	std::vector<std::vector<void(*)()>> features) {
 	int greedyAction;
 	double bestVal = -1 * DOUBLE_MAX;
+	Unit returnTarget;
 	// run through all estimated Q-values
 	for (int action = 0; action < numActions; action++) {
-		for (auto &target in state.enemies) { // try each possible target - WARNING: only works with attack
-			state.enemies = state.target;
+		for (auto &target in state.enemies) { // try each possible target - WARNING: only works with attack(f,e)
+			state.target = target;
 			double estimate = estimateQ(state, action, weights, features);
 			if (estimate > bestVal) {
 				bestVal = estimate;
+				returnTarget = state.target;
 				greedyAction = action;
 			}
 		}
 	}
+	state.target = returnTarget;
 	return greedyAction;
 }
 
