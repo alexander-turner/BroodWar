@@ -68,33 +68,38 @@ int main(int argc, const char* argv[])
       Unitset units    = Broodwar->self()->getUnits();
       for ( auto &u : units )
       {
-		  /*
-		  std::vector<bool(*)(Unit, Unit)> actions;
-		  Unitset targets = u->getUnitsInRadius(5);	//TODO: figure out optimal radius + enemies
-		  Broodwar << targets << std::endl;
-
-		  Unit target = targets.getClosestUnit(Broodwar->self()->getStartLocation());
-		  bool(*attack_i)(Unit, Unit);
-		  attack_i = &attackUnit;
-		  actions.push_back(attack_i);
-
-		  //Change return type of statefunction this in QFN.cpp or make a template
-		  bool(*) startState;
-		  startState = &u->isUnderAttack();
-
-		  //Revise syntax
-		  vector<vector<void(*)()>> features;
-		  int(*) unitHP;
-		  unitHP = &u->getHitPoints();
-		  features.push_back(unitHP);
-
-		  //Call Qfn
-		  vector<vector<double>> QFunctionApproximation(startState, actions, features);*/
-
       }
     }
     while(Broodwar->isInGame())
     {
+		Unitset units = Broodwar->self()->getUnits();
+		//Unit u = Broodwar->getClosestUnit(Positions::Origin, Filter::IsOwned);
+		Unitset enemies = Broodwar->enemy()->getUnits();
+		Unit firstEnemy = enemies.getClosestUnit();
+		for(auto &u: units)
+		{
+			if (u->isAttacking())
+				continue;
+			
+			UnitCommand::attack(u, firstEnemy);
+
+			for (auto &e : enemies)
+			{	/*if (firstEnemy->isUnderAttack() == NULL)
+					Broodwar->sendText("Under attack returns null");
+				else
+					Broodwar->sendText("%s", firstEnemy->isUnderAttack());*/
+
+				if (e->isUnderAttack())
+				{
+					Broodwar->sendText("[%s] under attack", e->getType().c_str());
+					e->move(Positions::Origin);
+					Broodwar->sendText("[%s] fleeing", e->getType().c_str());
+				}
+
+			}
+		}
+
+
       for(auto &e : Broodwar->getEvents())
       {
         switch(e.getType())
