@@ -4,7 +4,7 @@
 #include <thread>
 #include <chrono>
 #include <string>
-#include "/Program Files (x86)//BWAPI/functionWrappers.h"
+#include "../functionWrappers.h"
 using namespace BWAPI;
 
 void drawStats();
@@ -70,56 +70,16 @@ int main(int argc, const char* argv[])
     {
       if (Broodwar->enemy())
         Broodwar << "The match up is " << Broodwar->self()->getRace() << " vs " << Broodwar->enemy()->getRace() << std::endl;
-      Unitset units    = Broodwar->self()->getUnits();
-      for ( auto &u : units )
-      {
-      }
     }
-    while(Broodwar->isInGame())
-    {
-		Unitset units = Broodwar->self()->getUnits();
-		//Unit u = Broodwar->getClosestUnit(Positions::Origin, Filter::IsOwned);
-		Unitset enemies = Broodwar->enemy()->getUnits();
-		Unit firstEnemy = enemies.getClosestUnit();
-		for(auto &u: units)
-		{
-			if (u->isAttacking())
-				continue;
-			
-			UnitCommand::attack(u, firstEnemy);
 
-			for (auto &e : enemies)
-			{	/*if (firstEnemy->isUnderAttack() == NULL)
-					Broodwar->sendText("Under attack returns null");
-				else
-					Broodwar->sendText("%s", firstEnemy->isUnderAttack());*/
-
-				if (e->isUnderAttack())
-				{
-					Broodwar->sendText("[%s] under attack", e->getType().c_str());
-					e->move(Positions::Origin);
-					Broodwar->sendText("[%s] fleeing", e->getType().c_str());
-				}
-
-			}
-		}
-
-
-      for(auto &e : Broodwar->getEvents())
-
-    }
 	Unitset units = Broodwar->self()->getUnits();
-	Unit e = Broodwar->getClosestUnit(Positions::Origin, Filter::IsEnemy);
     while(Broodwar->isInGame())
     {
 		for (auto &u : units) {
-
-			
 			if (u != NULL) {
 				currState.currentUnit = u;
 				currState.target = Broodwar->getClosestUnit(Positions::Origin, Filter::IsEnemy);
 				actionVector.at(0)(currState);
-				
 			}
 		}
 

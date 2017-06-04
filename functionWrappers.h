@@ -9,7 +9,7 @@ struct StateInfo {
 	Unit target;
 	Unitset friendlies;
 	Unitset enemies;
-
+	int actionInd; // which action has been chosen for currentUnit, target
 };
 
 double getHPtoDPSratio(StateInfo state);
