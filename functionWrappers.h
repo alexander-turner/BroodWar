@@ -1,3 +1,6 @@
+#ifndef FUNCTIONS
+#define FUNCTIONS
+
 
 #include <iostream>
 #include <vector>
@@ -105,3 +108,4 @@ double attackEnemy(StateInfo state) {
 	return 1.0;
 }
 
+#endif // !FUNCTIONS

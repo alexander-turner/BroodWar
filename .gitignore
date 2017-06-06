@@ -23,3 +23,7 @@
 *.pdb
 *.pdb
 *.vcxproj
+*.tlog
+ExampleAIClient/Release/ExampleAIClient.tlog/CL.write.1.tlog
+*.pdb
+ExampleAIClient/Release/vc141.pdb

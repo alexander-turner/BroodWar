@@ -5,6 +5,7 @@
 #include <chrono>
 #include <string>
 #include "../functionWrappers.h"
+#include "../QFnApprox.h"
 using namespace BWAPI;
 
 void drawStats();
@@ -26,12 +27,15 @@ void reconnect()
 int main(int argc, const char* argv[])
 {
 	Functions f;
+	QLearn qfn;
 	std::vector <double(*) (StateInfo)> actionVector;
+	std::vector <double(*) (StateInfo)> featureVector;
 	  std::cout << "Connecting..." << std::endl;
 	  actionVector = f.getActions();
+	  featureVector = f.getFeatures();
 	  StateInfo currState;
 	  StateInfo prevState;
-
+	  
   reconnect();
   while(true)
   {
@@ -79,7 +83,8 @@ int main(int argc, const char* argv[])
 			if (u != NULL) {
 				currState.currentUnit = u;
 				currState.target = Broodwar->getClosestUnit(Positions::Origin, Filter::IsEnemy);
-				actionVector.at(0)(currState);
+				std::vector<double> wts;
+				wts = qfn.QFunctionApproximation(actionVector, featureVector, NULL);
 			}
 		}
 
