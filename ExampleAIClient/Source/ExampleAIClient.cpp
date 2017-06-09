@@ -50,8 +50,8 @@ int main(int argc, const char* argv[])
       }
     }
     std::cout << "starting match!" << std::endl;
-    Broodwar->sendText("Hello world!");
-    Broodwar << "The map is " << Broodwar->mapName() << ", a " << Broodwar->getStartLocations().size() << " player map" << std::endl;
+    //Broodwar->sendText("Hello world!");
+    //Broodwar << "The map is " << Broodwar->mapName() << ", a " << Broodwar->getStartLocations().size() << " player map" << std::endl;
     // Enable some cheat flags
     Broodwar->enableFlag(Flag::UserInput);
     // Uncomment to enable complete map information
@@ -83,8 +83,8 @@ int main(int argc, const char* argv[])
 			if (u != NULL) {
 				currState.currentUnit = u;
 				currState.target = Broodwar->getClosestUnit(Positions::Origin, Filter::IsEnemy);
-				std::vector<double> wts;
-				wts = qfn.QFunctionApproximation(actionVector, featureVector, NULL);
+				//std::vector<double> wts;
+				qfn.QFunctionApproximation(actionVector, featureVector, currState);
 			}
 		}
 

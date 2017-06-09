@@ -19,7 +19,7 @@ double getHPtoDPSratio(StateInfo state);
 double getHP(StateInfo state);
 double getDPS(StateInfo state);
 double attackEnemy(StateInfo state);
-
+double moveToOrigin(StateInfo state);
 class Functions
 {
 public:
@@ -44,6 +44,10 @@ public:
 		double(*attackF) (StateInfo state);
 		attackF = &attackEnemy;
 		actionVector.push_back(attackF);
+
+		double(*moveToOr) (StateInfo state);
+		moveToOr = &moveToOrigin;
+		actionVector.push_back(moveToOr);
 
 	}
 
@@ -84,8 +88,9 @@ Functions to add - tried including these as member functions
 but it cause type errors
 */
 double getDPS(StateInfo state) {
-	Unit u = state.currentUnit;
-	return ((double)u->getType().groundWeapon().damageAmount() * u->getType().maxGroundHits()) / u->getType().groundWeapon().damageCooldown();
+
+	double dmg = 6 / 15;
+	return dmg;
 }
 
 double getHP(StateInfo state) {
@@ -94,16 +99,28 @@ double getHP(StateInfo state) {
 }
 
 double getHPtoDPSratio(StateInfo state) {
-	return getDPS(state) / getHP(state);
+	Unit u = state.currentUnit;
+	return u->getHitPoints();
+	return getDPS(state) / u->getHitPoints();
 }
 
 double attackEnemy(StateInfo state) {
 
 	Unit u = state.currentUnit;
 	Unit e = state.target;
-
-	UnitCommand::attack(u, e);
+	u->attack(e);
+	//UnitCommand::attack(u, e);
 	std::cout << u << "attacking" << e << std::endl;
+	//returns double so it can fit in double type vector of functions
+	return 1.0;
+}
+
+double moveToOrigin(StateInfo state)
+{
+	Unit u = state.currentUnit;
+	u->move(Positions::Origin);
+
+	std::cout << u << "moving to" << Positions::Origin << std::endl;
 	//returns double so it can fit in double type vector of functions
 	return 1.0;
 }
