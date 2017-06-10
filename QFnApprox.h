@@ -19,20 +19,25 @@ public:
 		Broodwar->sendText("Test");
 	}
 
-
+	/* TODO: 
+	Fix DPS function
+	Run for arbitrary number of games - auto-restart
+	Output scores to CSV for analysis
+	Open / save weight file
+	*/
 	// How to normalize rewards for bad situations? Granularity?
 	/* Given a starting state, a set of actions and features, run GQ and return the feature weights. 
 	   features is composed of |actions| vectors each containing k features. Optional filepath parameter allows for loading and saving weights.
 	*/
-	void QFunctionApproximation(std::vector<double(*)(StateInfo)> actions, std::vector<double(*)(StateInfo)> features, StateInfo state) {
+	StateInfo QFunctionApproximation(std::vector<double(*)(StateInfo)> actions, std::vector<double(*)(StateInfo)> features, StateInfo state) {
 		//std::cout << "In QFunctionApproximation()" << std::endl;
 		int numActions = actions.size();
 		int maxIter = 100; 
 		std::vector<double> weights = this->weights; 
-		StateInfo prevState = this->prevState; // Info on the current and previous states
+		
 		this->currState = state;
-		std::vector <double(*) (StateInfo)> orders; // set of commands executed each round
-
+		std::vector <StateInfo> orders; // set of commands executed each round
+		
 		/*if we wrap QFN in a class we can just do this in the constructor
 		for now i've hard coded the values of the weight vector and commented out the file IO -AG */
 		/*if (filepath) {
@@ -51,29 +56,32 @@ public:
 		//for (int i = 0; i < maxIter; i++) {
 			if (Broodwar->isInGame()) {
 				// update weights given the orders executed last time
-				std::cout  << prevState.currentUnit << std::endl;
-				if (prevState.currentUnit != NULL)
-					batchUpdateWeights(orders, state, prevState, features, actions);	//weights doesnt currently return anything -AG
-				currState.friendlies = Broodwar->self()->getUnits(); // do we have to keep calling this? -> I think we might bc the number of units might change per iteration -AG
-				currState.enemies = Broodwar->enemy()->getUnits();
+				if (this->prevState.currentUnit != NULL)
+					batchUpdateWeights(orders, this->currState, this->prevState, features, actions);	//weights doesnt currently return anything -AG
+				this->currState.friendlies = Broodwar->self()->getUnits(); // do we have to keep calling this? -> I think we might bc the number of units might change per iteration -AG
+				this->currState.enemies = Broodwar->enemy()->getUnits();
+				for (auto &e : this->currState.enemies)
+					this->currState.enemyHP[e] = e->getHitPoints();
 				orders.clear(); // reset orders
 				for (auto &u : this->currState.friendlies) { // Calculate action for each unit
-					int prevAction = currState.actionInd;
-					Unit prevTarget = currState.target;
+					this->currState.friendlyHP[u] = u->getHitPoints();
+					int prevAction = this->currState.actionInd;
+					Unit prevTarget = this->currState.target;
 					if (!u->exists())
 						continue;
 					this->currState.currentUnit = u;
 					this->currState.actionInd = selectAction(actions, features); // how to extract target? -> see next line -AG
-					//orders.push_back(currState);	//didn't quite understand the purpose of this? -AG
+					orders.push_back(this->currState);	//didn't quite understand the purpose of this? -AG
 					if (prevAction != this->currState.actionInd)
 					{
-						
 						actions.at(this->currState.actionInd)(this->currState); // execute action
-						std::cout << "Changing from " << prevAction << " to " << this->currState.actionInd << std::endl;
+						//std::cout << "Changing from " << prevAction << " to " << newState.actionInd << std::endl;
 					}
-					//}
+
 				}
-				this->prevState = currState;
+				
+ 				this->prevState = this->currState;
+
 			}
 			//Broodwar->restartGame();
 		//}
@@ -85,7 +93,7 @@ public:
 			file.close();
 		}*/
 		this->weights = weights; //update weight vector in class
-		//return weights;
+		return this->currState;
 	}
 	/*
 	Select an action index in a state using an e-greedy algorithm.
@@ -101,7 +109,7 @@ public:
 		if ((double) std::rand() / (RAND_MAX) <= epsilon)
 			while (action == greedyAction)
 				action = rand() % actions.size();
-		std::cout << "greedy action is: " << greedyAction << "| " << "action chosen is: " << action << std::endl;
+		//std::cout << "greedy action is: " << greedyAction << "| " << "action chosen is: " << action << std::endl;
 
 		return action;
 		
@@ -139,14 +147,18 @@ public:
 	/*
 	For each order executed (specified via StateInfo), calculate and apply batched changes to weights.
 	*/
-	void batchUpdateWeights(std::vector <double(*) (StateInfo)> orders, StateInfo currState, StateInfo prevState,
+	void batchUpdateWeights(std::vector <StateInfo> orders, StateInfo currState, StateInfo prevState,
 		std::vector <double(*) (StateInfo)> features, std::vector <double(*) (StateInfo)> actions) {
 		//std::cout << "In batchUpdateWeights()" << std::endl;
 		std::vector<double> weights = this->weights;
 		std::vector<double> weight_changes = initializeWeights(weights, actions.size(), features.size(), 0);
-		std::vector<double> tweight;	//temp weight vector
+		std::vector<double> temp_weight;	//temp weight vector
 		for (int actionInd = 0; actionInd < actions.size(); actionInd++) {
-			tweight = updateWeights(actionInd, actions.size(), currState, prevState, weights, features, actions);
+			temp_weight = updateWeights(actionInd, actions.size(), currState, prevState, weights, features, actions);
+			for (int i = 0; i < weight_changes.size(); i++)
+			{
+				weight_changes[i] += temp_weight[i];
+			}
 		}
 
 		for (int i = 0; i < weights.size(); i++)
@@ -161,7 +173,6 @@ public:
 	*/
 	std::vector<double> updateWeights(int actionInd, int numActions, StateInfo currState, StateInfo prevState, std::vector<double> weights,
 			std::vector <double(*) (StateInfo)> features, std::vector <double(*) (StateInfo)> actions) {
-		//std::cout << "In updateWeights()" << std::endl;
 		// constants
 		double learningRate = 0.01;
 		double discount = 0.9;
@@ -182,11 +193,36 @@ public:
 		return weight_changes; 
 	}
 
+	// Reward := change in our total hitpoint lead
 	double reward(StateInfo currState, StateInfo prevState, std::vector <double(*) (StateInfo)> features)
 	{
-		double R_curr = 1/(features.at(2)(currState));
-		double R_prev = 1/(features.at(2)(prevState));
-		return R_curr - R_prev;
+		// Current time step
+		double R_curr = getHPDiff(currState);  
+
+		// Previous time step
+		double R_prev = getHPDiff(prevState);
+
+		double reward;
+		if (R_prev >= 0)
+			reward = R_curr - R_prev; // 50 + 30
+		else
+			reward = R_curr + R_prev;
+		std::cout << "Reward differential:" << reward << std::endl;
+		return reward;
+	}
+
+	// Returns (total friendly HP - total enemy HP) for given state
+	double getHPDiff(StateInfo state) {
+		double HPDiff = 0;
+		for (auto it : state.friendlyHP)
+		{
+			HPDiff += it.second;
+		}
+		for (auto it : state.enemyHP)
+		{
+			HPDiff -= it.second;
+		}
+		return HPDiff;
 	}
 
 	double estimateQ(StateInfo state, int actionInd, std::vector<double> weights, std::vector <double(*) (StateInfo)> actions, std::vector <double(*) (StateInfo)> features) {
@@ -213,6 +249,7 @@ public:
 		}
 		return weights;
 	}
+
 	private:
 		std::vector<double> weights;
 		StateInfo currState;

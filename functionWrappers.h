@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <functional>
+#include <unordered_map>
 using namespace BWAPI;
 
 struct StateInfo {
@@ -13,6 +14,9 @@ struct StateInfo {
 	Unitset friendlies;
 	Unitset enemies;
 	int actionInd; // which action has been chosen for currentUnit, target
+	std::unordered_map<Unit, int> friendlyHP;
+	std::unordered_map<Unit, int> enemyHP;
+	
 };
 
 double getHPtoDPSratio(StateInfo state);
