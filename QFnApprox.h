@@ -38,7 +38,6 @@ public:
 	StateInfo QFunctionApproximation(std::vector<double(*)(StateInfo)> actions, std::vector<double(*)(StateInfo)> features, std::string filepath="") {
 		this->actions = actions;
 		this->features = features;
-		this->orders.clear(); // reset orders
 		
 		if (filepath != "") {
 			std::ifstream input_file(filepath); 
@@ -46,7 +45,7 @@ public:
 			/*while (input_file >> tempVar)
 				this->weights.push_back(tempVar);*/ // TODO: Make compatible with 2d-vec
 		}
-		else if (this->weights.size() == 0) {
+		else if (!this->prevState.currentUnit) {
 			this->weights = initializeWeights(); // Fill with ones (dim: |actions| x k+1)
 		}
 
@@ -56,7 +55,7 @@ public:
 		//	this->currState.enemyHP[e] = e->getHitPoints();
 
 		// update weights given the orders executed last time
-		if (this->prevState.currentUnit != NULL)
+		if (this->prevState.currentUnit)
 			batchUpdateWeights(this->orders);
 		this->orders.clear(); // reset orders
 		this->prevState = this->currState;
@@ -179,7 +178,7 @@ public:
 			if (i == 0) // just add the gradient to the standalone weight
 				weight_changes.at(i).at(actionInd) = noisyGradient;
 			else  // multiply the feature by the gradient
-				weight_changes.at(i).at(actionInd) = noisyGradient*this->features.at(i)(prevState);
+				weight_changes.at(i).at(actionInd) = noisyGradient*this->features.at(i-1)(prevState);
 		}
 
 		return weight_changes; 
