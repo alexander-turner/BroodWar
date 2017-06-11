@@ -16,11 +16,27 @@ void reconnect()
 	}
 }
 
+// Writes the elements in results to the given filepath (same-directory 'results.csv' is the default)
+void outputResultsToCSV(std::vector<double> results, std::string filepath = "") {
+	if (filepath == "")
+		filepath = "results.csv";
+
+	std::ofstream myfile;
+	myfile.open(filepath);
+	for (int i=0; results.size(); i++) {
+		myfile << results[i];
+		myfile << ",";
+	}
+	myfile << "\n";
+	myfile.close();
+}
+
 int main(int argc, const char* argv[])
 {
 	Functions f;
 	QLearn qfn;
 	std::vector <double(*) (StateInfo)> actionVector = f.getActions(), featureVector = f.getFeatures();
+	std::vector <double> scores;
 	StateInfo currState, prevState;
 	int n = 5; // how many times we want to run the game
 	  
@@ -54,9 +70,13 @@ int main(int argc, const char* argv[])
 					reconnect();
 				}
 			}
+			scores.push_back(qfn.getHPDiff(currState)); // Store score
 			Broodwar->restartGame();
 		}
 	}
+
+	outputResultsToCSV(scores);
+
 	std::cout << "Press ENTER to continue..." << std::endl;
 	std::cin.ignore();
 	return 0;

@@ -118,7 +118,7 @@ public:
 		Unit returnTarget;
 
 		// run through all estimated Q-values
-		for (int action = 0; action < actions.size(); action++) {
+		for (int action = 0; action < (int) actions.size(); action++) {
 			for (auto &target : state.enemies) { // try each possible target - WARNING: only works with attack(f,e)
 				state.target = target;
 				double estimate = estimateQ(state, greedyAction, weights, actions, features);

@@ -98,12 +98,6 @@ void ExampleAIModule::onFrame()
     if ( !u->isCompleted() || u->isConstructing() )
       continue;
 
-<<<<<<< HEAD
-	// Naive closest-attack
-	Unit firstEnemy = enemies.getClosestUnit();
-	u->attack(firstEnemy);
-	Broodwar->sendText("%d", u->getHitPoints());
-=======
 
     // Finally make the unit do some stuff!
     
@@ -201,7 +195,7 @@ void ExampleAIModule::onFrame()
 
     }
 
->>>>>>> f02f26c7e96d659174ec71079092e578aed2461d
+
   } // closure: unit iterator
 }
 
