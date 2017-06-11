@@ -115,8 +115,8 @@ double attackEnemy(StateInfo state) {
 	Unit e = state.target;
 
 	std::cout << u << "attacking" << e << std::endl;
-	u->attack(e);
-	//UnitCommand::attack(u, e);
+	//u->attack(e);
+	UnitCommand::attack(u, e);
 	
 	//returns double so it can fit in double type vector of functions
 	return 1.0;
