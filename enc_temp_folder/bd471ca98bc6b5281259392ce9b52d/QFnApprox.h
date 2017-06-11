@@ -173,7 +173,7 @@ public:
 		for (int i = 0; i < (int) weight_changes.size(); i++) {
 			double noisyGradient = reward(currState, prevState) + 
 				discount*estimateQ(currState) - 
-				estimateQ(prevState); // this diverges
+				estimateQ(prevState); // check which index to pass in
 			noisyGradient *= learningRate;
 			std::cout << "Gradient:" << noisyGradient << std::endl;
 			
