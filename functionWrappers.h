@@ -19,7 +19,7 @@ struct StateInfo {
 	
 };
 
-double getHPtoDPSratio(StateInfo state);
+double getDPStoHPratio(StateInfo state);
 double getHP(StateInfo state);
 double getDPS(StateInfo state);
 double attackEnemy(StateInfo state);
@@ -42,7 +42,7 @@ public:
 		functionVector.push_back(getDPSF);
 
 		double(*DPStoHP) (StateInfo state);
-		DPStoHP = &getHPtoDPSratio;
+		DPStoHP = &getDPStoHPratio;
 		functionVector.push_back(DPStoHP);
 
 		double(*attackF) (StateInfo state);
@@ -88,8 +88,7 @@ private:
 };
 
 /*
-Functions to add - tried including these as member functions
-but it caused type errors
+Functions to be added
 */
 double getDPS(StateInfo state) {
 	Unit u = state.currentUnit;
@@ -107,7 +106,7 @@ double getHP(StateInfo state) {
 	return u->getHitPoints();
 }
 
-double getHPtoDPSratio(StateInfo state) {
+double getDPStoHPratio(StateInfo state) {
 	Unit u = state.currentUnit;
 	return getDPS(state) / u->getHitPoints();
 }

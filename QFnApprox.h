@@ -19,7 +19,6 @@ public:
 	Paper: How to normalize rewards for bad situations? Granularity?
 
 	TODO: 
-	Fix state updating - tentatively DONE
 	Run for arbitrary number of games - auto-restart
 	Output scores to CSV for analysis - DONE
 	Optional: open / save weight file
@@ -74,7 +73,7 @@ public:
 	Select an action index in a state using an e-greedy algorithm.
 	*/
 	int selectAction() {
-		double epsilon = 0.1; // probability of choosing non-greedy action
+		double epsilon = 0.5; // probability of choosing non-greedy action
 		int greedyAction = selectGreedyAction();
 		Unit greedyTarget = this->currState.target;
 
@@ -159,17 +158,15 @@ public:
 		
 		int greedyAction = selectGreedyAction(); 
 
-		std::cout << "Previous: ";
-		printHP(prevState);
-		std::cout << "Current: ";
-		printHP(currState);
 		currState.actionInd = greedyAction;
 		for (int i = 0; i < (int) weight_changes.size(); i++) {
 			double noisyGradient = reward(currState, prevState) + 
 				discount*estimateQ(currState) - 
 				estimateQ(prevState); // this diverges
+			/*std::cout << "noisyGradient = " << reward(currState, prevState) << " + " << discount*estimateQ(currState)
+				<< " - " << estimateQ(prevState) << std::endl;*/
 			noisyGradient *= learningRate;
-			std::cout << "Gradient:" << noisyGradient << std::endl;
+			std::cout << "Gradient: " << noisyGradient << std::endl;
 			
 			if (i == 0) // just add the gradient to the standalone weight
 				weight_changes.at(i).at(actionInd) = noisyGradient;
@@ -184,14 +181,12 @@ public:
 	Initialize a |features|+1 x |actions| vector of the given value (1 by default).
 	*/
 	std::vector<std::vector<double>> initializeWeights(double val = 1.0) {
-		std::vector<std::vector<double>> weights;
+		std::vector<std::vector<double>> newWeights;
 		for (int i = 0; i < (int) this->features.size() + 1; i++) {
-			std::vector<double> featureVec;
-			for (int j = 0; j < (int) this->actions.size(); j++)
-				featureVec.push_back(val);
-			weights.push_back(featureVec);
+			std::vector<double> featureVec((int) this->actions.size(), val);
+			newWeights.push_back(featureVec);
 		}
-		return weights;
+		return newWeights;
 	}
 
 	double estimateQ(StateInfo state) {
@@ -212,7 +207,6 @@ public:
 		double R_prev = getHPDiff(prevState);
 
 		double reward = R_curr - R_prev;
-		std::cout << "Reward:" << reward << std::endl;
 		return reward;
 	}
 
