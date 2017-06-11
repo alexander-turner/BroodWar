@@ -2,6 +2,7 @@
 #define QLEARN
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include "../BWAPI/functionwrappers.h"
 using namespace BWAPI;
@@ -12,7 +13,6 @@ public:
 	QLearn()
 	{
 		prevState.currentUnit = NULL;
-		this->weights = { 1.0, 1.0, 1.0 };
 	}
 
 	/* 
@@ -23,11 +23,11 @@ public:
 	TODO: 
 	Fix DPS function
 	Fix state updating
-	Store previous orders and fix updateWeights
+	Store previous orders and fix updateWeights - DONE
 	Fix weights for arbitrary number of features / actions
 	Make estimateQ dynamic
 	Run for arbitrary number of games - auto-restart
-	Output scores to CSV for analysis
+	Output scores to CSV for analysis - DONE
 	Optional: open / save weight file
 	*/
 	// How to normalize rewards for bad situations? Granularity?
@@ -35,21 +35,18 @@ public:
 	   features is composed of |actions| vectors each containing k features. Optional filepath parameter allows for loading and saving weights.
 	*/
 	StateInfo QFunctionApproximation(std::vector<double(*)(StateInfo)> actions, std::vector<double(*)(StateInfo)> features, StateInfo state, std::string filepath="") {
-		//std::cout << "In QFunctionApproximation()" << std::endl;
 		this->currState = state;
 		std::vector <StateInfo> orders; // set of commands executed each round
 		
 
 		if (filepath != "") {
-			std::ifstream input_file(filePath); // check that this works. also, expand for actions / features?
+			std::ifstream input_file(filepath); // check that this works. also, expand for actions / features?
 			double tempVar;
 			while (input_file >> tempVar)
-			{
-				weights.push_back(tempVar);
-			}
+				this->weights.push_back(tempVar);
 		}
-		else {
-			initializeWeights(weights, numActions, features.size()); // Fill with ones (dim: |actions| x k+1)
+		else if (weights.size() == 0) {
+			this->weights = initializeWeights(actions.size(), features.size()); // Fill with ones (dim: |actions| x k+1)
 		}
 
 		if (Broodwar->isInGame()) {
@@ -68,23 +65,19 @@ public:
 					continue;
 
 				this->currState.friendlyHP[u] = u->getHitPoints();
-				int prevAction = this->currState.actionInd;
-				Unit prevTarget = this->currState.target;
 				this->currState.currentUnit = u;
 				this->currState.actionInd = selectAction(actions, features); // how to extract target? -> see next line -AG
 				orders.push_back(this->currState);
 
-				if (prevAction != this->currState.actionInd) // why do we need this?
-				{
-					actions.at(this->currState.actionInd)(this->currState); // execute action
-				}
+				actions.at(this->currState.actionInd)(this->currState); // execute action
 			}	
 		}
 
-		if (filepath) { // overwrite?
+		if (filepath != "") { // overwrite?
 			std::ofstream file;
 			file.open(filepath);
-			file << weights;
+			for (int i = 0; i < (int) weights.size(); i++)
+				file << weights.at(i);
 			file.close();
 		}
 		return this->currState;
@@ -137,7 +130,7 @@ public:
 	For each order executed (specified via StateInfo), calculate and apply batched changes to weights.
 	*/
 	void batchUpdateWeights(std::vector <StateInfo> orders, std::vector <double(*) (StateInfo)> features, std::vector <double(*) (StateInfo)> actions) {
-		std::vector<double> weight_changes = initializeWeights(this->weights, actions.size(), features.size(), 0);
+		std::vector<double> weight_changes = initializeWeights(actions.size(), features.size(), 0);
 		
 		// For each order
 		for (int i = 0; i < (int) orders.size(); i++) {
@@ -161,7 +154,7 @@ public:
 		double discount = 0.9;
 
 		int actionInd = prevState.actionInd; 
-		std::vector<double> weight_changes = { 1.0, 1.0, 1.0 }; //initializeWeights(weights, numActions, features.size(), 0);
+		std::vector<double> weight_changes = initializeWeights(actions.size(), features.size(), 0); 
 		
 		int greedyAction = selectGreedyAction(actions, features); //need to create a new state before we can use it here
 		currState.actionInd = greedyAction;
@@ -194,7 +187,8 @@ public:
 	/*
 	Initialize an |actions|*(|features|+1) vector of the given value (1 by default).
 	*/
-	std::vector<double> initializeWeights(std::vector<double> weights, int numActions, int numFeatures, double val=1.0) {
+	std::vector<double> initializeWeights(int numActions, int numFeatures, double val=1.0) {
+		std::vector<double> weights;
 		for (int i = 0; i < numActions; i++) {
 			double newAction; // put this to a vector? How do we make this able to store multiple values
 			for (int j = 0; j < numFeatures + 1; j++)

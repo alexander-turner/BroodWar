@@ -1,6 +1,7 @@
 #include <BWAPI.h>
 #include <BWAPI/Client.h>
 #include <iostream>
+#include <fstream>
 #include <thread>
 #include <chrono>
 #include <string>
@@ -21,14 +22,14 @@ void outputResultsToCSV(std::vector<double> results, std::string filepath = "") 
 	if (filepath == "")
 		filepath = "results.csv";
 
-	/*std::ofstream myfile;
+	std::ofstream myfile;
 	myfile.open(filepath);
 	for (int i=0; results.size(); i++) {
 		myfile << results[i];
 		myfile << ",";
 	}
 	myfile << "\n";
-	myfile.close();*/
+	myfile.close();
 }
 
 int main(int argc, const char* argv[])
