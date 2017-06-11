@@ -16,23 +16,22 @@ public:
 	}
 
 	/* 
-	Differences:
-	Why do we track prevaction/prevUnit?
-	Store actions and features in class for simplicity?
-
 	TODO: 
-	Fix DPS function
+	Fix DPS function - DONE
 	Fix state updating
-	Store previous orders and fix updateWeights
-	Fix weights for arbitrary number of features / actions
-	Make estimateQ dynamic
+	Fix action vector being size=1
+	Fix for 2d weights
+	Store previous orders and fix updateWeights - DONE
+	EstimateQ code doublecheck - where are actions?
+	Doublecheck weight_changes.size() in updateWeights for 2d arrays
+	Fix weights for arbitrary number of features / actions - DONE (OK)
 	Run for arbitrary number of games - auto-restart
-	Output scores to CSV for analysis
+	Output scores to CSV for analysis - DONE
 	Optional: open / save weight file
 	*/
-	// How to normalize rewards for bad situations? Granularity?
-	/* Given a starting state, a set of actions and features, run GQ and return the feature weights. 
-	   features is composed of |actions| vectors each containing k features. Optional filepath parameter allows for loading and saving weights.
+	// Paper: How to normalize rewards for bad situations? Granularity?
+	/* Given a starting state, a set of actions and features, run GQ and update the action-feature weights.
+	   weights has dimensions: |features|+1, |actions|. Optional filepath parameter allows for loading and saving weights.
 	*/
 	StateInfo QFunctionApproximation(std::vector<double(*)(StateInfo)> actions, std::vector<double(*)(StateInfo)> features, std::string filepath="") {
 		this->actions = actions;
