@@ -62,8 +62,7 @@ int main(int argc, const char* argv[])
 			Broodwar->enableFlag(Flag::CompleteMapInformation);
 		  
 			while (Broodwar->isInGame()) {
-				prevState = currState; // is this right?
-				currState = qfn.QFunctionApproximation(actionVector, featureVector, currState);
+				qfn.QFunctionApproximation(actionVector, featureVector);
 
 				BWAPI::BWAPIClient.update();
 				if (!BWAPI::BWAPIClient.isConnected()) {

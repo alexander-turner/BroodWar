@@ -49,9 +49,9 @@ public:
 		attackF = &attackEnemy;
 		actionVector.push_back(attackF);
 
-		double(*moveToOr) (StateInfo state);
+		/*double(*moveToOr) (StateInfo state);
 		moveToOr = &moveToOrigin;
-		actionVector.push_back(moveToOr);
+		actionVector.push_back(moveToOr);*/
 
 	}
 
