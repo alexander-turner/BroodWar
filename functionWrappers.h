@@ -117,8 +117,6 @@ double attackEnemy(StateInfo state) {
 	Unit u = state.currentUnit;
 	Unit e = state.target;
 
-	std::cout << u << "attacking" << e << std::endl;
-	//u->attack(e);
 	UnitCommand::attack(u, e);
 	
 	//returns double so it can fit in double type vector of functions
@@ -130,8 +128,6 @@ double moveToOrigin(StateInfo state)
 	Unit u = state.currentUnit;
 	u->move(Positions::Origin);
 
-	std::cout << u << "moving to" << Positions::Origin << std::endl;
-	//returns double so it can fit in double type vector of functions
 	return 1.0;
 }
 

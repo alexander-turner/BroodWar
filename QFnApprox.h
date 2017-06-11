@@ -19,14 +19,7 @@ public:
 	Paper: How to normalize rewards for bad situations? Granularity?
 
 	TODO: 
-	Fix DPS function - DONE
-	Fix state updating
-	Fix action vector being size=1
-	Fix for 2d weights
-	Store previous orders and fix updateWeights - DONE
-	EstimateQ code doublecheck - where are actions?
-	Doublecheck weight_changes.size() in updateWeights for 2d arrays
-	Fix weights for arbitrary number of features / actions - DONE (OK)
+	Fix state updating - tentatively DONE
 	Run for arbitrary number of games - auto-restart
 	Output scores to CSV for analysis - DONE
 	Optional: open / save weight file
@@ -36,23 +29,20 @@ public:
 	   weights has dimensions: |features|+1, |actions|. Optional filepath parameter allows for loading and saving weights.
 	*/
 	StateInfo QFunctionApproximation(std::vector<double(*)(StateInfo)> actions, std::vector<double(*)(StateInfo)> features, std::string filepath="") {
-		this->actions = actions;
-		this->features = features;
-		
 		if (filepath != "") {
 			std::ifstream input_file(filepath); 
-			double tempVar;
-			/*while (input_file >> tempVar)
+			/*double tempVar;
+			while (input_file >> tempVar)
 				this->weights.push_back(tempVar);*/ // TODO: Make compatible with 2d-vec
 		}
 		else if (!this->prevState.currentUnit) {
+			this->actions = actions;
+			this->features = features;
 			this->weights = initializeWeights(); // Fill with ones (dim: |actions| x k+1)
 		}
 
 		this->currState.friendlies = Broodwar->self()->getUnits();
 		this->currState.enemies = Broodwar->enemy()->getUnits();
-		//for (auto &e : this->currState.enemies)
-		//	this->currState.enemyHP[e] = e->getHitPoints();
 
 		// update weights given the orders executed last time
 		if (this->prevState.currentUnit)
@@ -63,7 +53,6 @@ public:
 			if (!u->exists())
 				continue;
 
-			//this->currState.friendlyHP[u] = u->getHitPoints();
 			this->currState.currentUnit = u;
 			this->currState.actionInd = selectAction();
 			this->orders.push_back(this->currState);
@@ -76,7 +65,7 @@ public:
 			file.open(filepath);
 			for (int i = 0; i < (int) this->weights.size(); i++)
 				for (int j = 0; j < (int) this->weights[i].size(); j++)
-				file << this->weights[i][j];
+					file << this->weights[i][j];
 			file.close();
 		}
 		return this->currState;
@@ -85,7 +74,7 @@ public:
 	Select an action index in a state using an e-greedy algorithm.
 	*/
 	int selectAction() {
-		double epsilon = 0.5; // probability of choosing non-greedy action
+		double epsilon = 0.1; // probability of choosing non-greedy action
 		int greedyAction = selectGreedyAction();
 		Unit greedyTarget = this->currState.target;
 
@@ -163,12 +152,17 @@ public:
 	std::vector<std::vector<double>> updateWeights(StateInfo currState, StateInfo prevState) {
 		// constants
 		double learningRate = 0.01;
-		double discount = 0.9;
+		double discount = 0.90;
 
 		int actionInd = prevState.actionInd; 
 		std::vector<std::vector<double>> weight_changes = initializeWeights(0); 
 		
 		int greedyAction = selectGreedyAction(); 
+
+		std::cout << "Previous: ";
+		printHP(prevState);
+		std::cout << "Current: ";
+		printHP(currState);
 		currState.actionInd = greedyAction;
 		for (int i = 0; i < (int) weight_changes.size(); i++) {
 			double noisyGradient = reward(currState, prevState) + 
@@ -187,7 +181,7 @@ public:
 	}
 
 	/*
-	Initialize an |actions|*(|features|+1) vector of the given value (1 by default).
+	Initialize a |features|+1 x |actions| vector of the given value (1 by default).
 	*/
 	std::vector<std::vector<double>> initializeWeights(double val = 1.0) {
 		std::vector<std::vector<double>> weights;
@@ -217,11 +211,7 @@ public:
 		// Previous time step
 		double R_prev = getHPDiff(prevState);
 
-		double reward;
-		if (R_prev >= 0)
-			reward = R_curr - R_prev;
-		else
-			reward = R_curr + R_prev;
+		double reward = R_curr - R_prev;
 		std::cout << "Reward:" << reward << std::endl;
 		return reward;
 	}
@@ -238,6 +228,18 @@ public:
 
 	double getScore() {
 		return getHPDiff(this->currState);
+	}
+
+	// Prints unit hitpoints
+	void printHP(StateInfo state) {
+		std::cout << "F: ";
+		for (auto &u : state.friendlies)
+			std::cout << u->getHitPoints() << " ";
+
+		std::cout << "E: ";
+		for (auto &u : state.enemies)
+			std::cout << u->getHitPoints() << " ";
+		std::cout << std::endl;
 	}
 
 	private:
