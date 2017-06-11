@@ -1,7 +1,6 @@
 #include <BWAPI.h>
 #include <BWAPI/Client.h>
 #include <iostream>
-#include <fstream>
 #include <thread>
 #include <chrono>
 #include <string>
@@ -22,14 +21,14 @@ void outputResultsToCSV(std::vector<double> results, std::string filepath = "") 
 	if (filepath == "")
 		filepath = "results.csv";
 
-	std::ofstream myfile;
+	/*std::ofstream myfile;
 	myfile.open(filepath);
 	for (int i=0; results.size(); i++) {
 		myfile << results[i];
 		myfile << ",";
 	}
 	myfile << "\n";
-	myfile.close();
+	myfile.close();*/
 }
 
 int main(int argc, const char* argv[])
@@ -38,7 +37,6 @@ int main(int argc, const char* argv[])
 	QLearn qfn;
 	std::vector <double(*) (StateInfo)> actionVector = f.getActions(), featureVector = f.getFeatures();
 	std::vector <double> scores;
-	StateInfo currState, prevState;
 	int n = 5; // how many times we want to run the game
 	  
 	std::cout << "Connecting..." << std::endl;
@@ -70,7 +68,7 @@ int main(int argc, const char* argv[])
 					reconnect();
 				}
 			}
-			scores.push_back(qfn.getHPDiff(currState)); // Store score
+			scores.push_back(qfn.getScore()); // Store score
 			Broodwar->restartGame();
 		}
 	}

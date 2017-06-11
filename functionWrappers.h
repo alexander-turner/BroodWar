@@ -49,9 +49,9 @@ public:
 		attackF = &attackEnemy;
 		actionVector.push_back(attackF);
 
-		/*double(*moveToOr) (StateInfo state);
+		double(*moveToOr) (StateInfo state);
 		moveToOr = &moveToOrigin;
-		actionVector.push_back(moveToOr);*/
+		actionVector.push_back(moveToOr);
 
 	}
 
@@ -92,9 +92,13 @@ Functions to add - tried including these as member functions
 but it caused type errors
 */
 double getDPS(StateInfo state) {
-	//Unit u = state.currentUnit;
-	//return ((double)u->getType().groundWeapon().damageAmount() * u->getType().maxGroundHits()) / u->getType().groundWeapon().damageCooldown();
-	double dmg = 6 / 15;
+	Unit u = state.currentUnit;
+	WeaponType weapon = u->getType().groundWeapon();
+	int dmgamount = weapon.damageAmount();
+	int hits = u->getType().maxGroundHits();
+	int cd = u->getType().groundWeapon().damageCooldown();
+	double dmg = (((double) dmgamount * hits) / cd);
+	std::cout << dmg << std::endl;
 	return dmg;
 }
 
@@ -105,7 +109,6 @@ double getHP(StateInfo state) {
 
 double getHPtoDPSratio(StateInfo state) {
 	Unit u = state.currentUnit;
-	return u->getHitPoints();
 	return getDPS(state) / u->getHitPoints();
 }
 
