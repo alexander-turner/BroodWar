@@ -17,13 +17,14 @@ public:
 
 	/* 
 	Differences:
-	Why do we track prevaction/prevUnit?
 	Store actions and features in class for simplicity?
 
 	TODO: 
 	Fix DPS function
 	Fix state updating
 	Store previous orders and fix updateWeights - DONE
+	EstimateQ code doublecheck - where are actions?
+	Doublecheck weight_changes.size() in updateWeights for 2d arrays
 	Fix weights for arbitrary number of features / actions
 	Make estimateQ dynamic
 	Run for arbitrary number of games - auto-restart
@@ -35,10 +36,11 @@ public:
 	   features is composed of |actions| vectors each containing k features. Optional filepath parameter allows for loading and saving weights.
 	*/
 	StateInfo QFunctionApproximation(std::vector<double(*)(StateInfo)> actions, std::vector<double(*)(StateInfo)> features, StateInfo state, std::string filepath="") {
+		this->actions = actions;
+		this->features = features;
 		this->currState = state;
 		std::vector <StateInfo> orders; // set of commands executed each round
 		
-
 		if (filepath != "") {
 			std::ifstream input_file(filepath); // check that this works. also, expand for actions / features?
 			double tempVar;
@@ -46,7 +48,7 @@ public:
 				this->weights.push_back(tempVar);
 		}
 		else if (weights.size() == 0) {
-			this->weights = initializeWeights(actions.size(), features.size()); // Fill with ones (dim: |actions| x k+1)
+			this->weights = initializeWeights(); // Fill with ones (dim: |actions| x k+1)
 		}
 
 		if (Broodwar->isInGame()) {
@@ -66,7 +68,7 @@ public:
 
 				this->currState.friendlyHP[u] = u->getHitPoints();
 				this->currState.currentUnit = u;
-				this->currState.actionInd = selectAction(actions, features); // how to extract target? -> see next line -AG
+				this->currState = selectAction(currState); // how to extract target? -> see next line -AG
 				orders.push_back(this->currState);
 
 				actions.at(this->currState.actionInd)(this->currState); // execute action
@@ -83,37 +85,46 @@ public:
 		return this->currState;
 	}
 	/*
-	Select an action index in a state using an e-greedy algorithm.
+	Use an e-greedy algorithm to modify and return the target and actionInd values for state.
 	*/
-	int selectAction(std::vector <double(*) (StateInfo)> actions, std::vector<double(*)(StateInfo)> features) {
+	StateInfo selectAction(StateInfo state) {
 		double epsilon = 0.5; // probability of choosing non-greedy action
-		int greedyAction = selectGreedyAction(actions, features);
-
+		state = selectGreedyAction(state);
+		int greedyAction = state.actionInd;
+		Unit greedyTarget = state.target;
+		std::unordered_map<int, Unit> unitmapping;
+		int i = 0;
+		for (auto &e : state.enemies) {
+			unitmapping[i] = e;
+			i++;
+		}
 		//std::cout << "current target is: " << state.target << std::endl;
-		int action = greedyAction;
-		if ((double) std::rand() / (RAND_MAX) <= epsilon)
-			while (action == greedyAction)
-				action = rand() % actions.size();
+		state.actionInd = greedyAction;
+		state.target = greedyTarget;
+		if ((double)std::rand() / (RAND_MAX) <= epsilon)
+			while (state.actionInd == greedyAction && state.target == greedyTarget) {
+				state.actionInd = rand() % (int) this->actions.size();
+				state.target = unitmapping[rand() % i];
+			}
 		//std::cout << "greedy action is: " << greedyAction << "| " << "action chosen is: " << action << std::endl;
 
-		return action;
+		return state;
 	}
 
 	/*
-	Returns index of greedy action according to state, weights, and features and modifies unit target to the best found for that action.
+	Returns modified state including greedy action index according to state, weights, and features and modifies unit target to the best found for that action.
 	*/
-	int selectGreedyAction(std::vector <double(*) (StateInfo)> actions, std::vector<double(*)(StateInfo)> features) {
-		StateInfo state = this->currState;
+	StateInfo selectGreedyAction(StateInfo state) {
 		double bestVal = -1 * DBL_MAX;
 		Unit returnTarget;
 
 		int greedyAction = 0;
 		// run through all estimated Q-values
-		for (int action = 0; action < (int) actions.size(); action++) {
+		for (int action = 0; action < (int) this->actions.size(); action++) {
 			state.actionInd = action;
 			for (auto &target : state.enemies) { // try each possible target - WARNING: only works with attack(f,e)
 				state.target = target;
-				double estimate = estimateQ(state, actions, features);
+				double estimate = estimateQ(state);
 				if (estimate > bestVal) {
 					bestVal = estimate;
 					returnTarget = state.target;
@@ -122,19 +133,19 @@ public:
 			}
 		}
 
-		this->currState.target = returnTarget;
-		return greedyAction;
+		state.target = returnTarget;
+		return state;
 	}
 
 	/*
 	For each order executed (specified via StateInfo), calculate and apply batched changes to weights.
 	*/
 	void batchUpdateWeights(std::vector <StateInfo> orders, std::vector <double(*) (StateInfo)> features, std::vector <double(*) (StateInfo)> actions) {
-		std::vector<double> weight_changes = initializeWeights(actions.size(), features.size(), 0);
+		std::vector<double> weight_changes = initializeWeights(0);
 		
 		// For each order
 		for (int i = 0; i < (int) orders.size(); i++) {
-			std::vector<double> temp_weight = updateWeights(this->currState, orders[i], features, actions); // prevOrders[i]?
+			std::vector<double> temp_weight = updateWeights(this->currState, orders[i]); // prevOrders[i]?
 			for (int j = 0; j < (int) weight_changes.size(); j++)
 				weight_changes[j] += temp_weight[j];
 		}
@@ -147,21 +158,19 @@ public:
 	/*
 	Perform TD update for each parameter after taking given action and return the changes.
 	*/
-	std::vector<double> updateWeights(StateInfo currState, StateInfo prevState, std::vector <double(*) (StateInfo)> features, 
-		std::vector <double(*) (StateInfo)> actions) {
+	std::vector<double> updateWeights(StateInfo currState, StateInfo prevState) {
 		// constants
 		double learningRate = 0.01;
 		double discount = 0.9;
 
 		int actionInd = prevState.actionInd; 
-		std::vector<double> weight_changes = initializeWeights(actions.size(), features.size(), 0); 
+		std::vector<double> weight_changes = initializeWeights(0); 
 		
-		int greedyAction = selectGreedyAction(actions, features); //need to create a new state before we can use it here
-		currState.actionInd = greedyAction;
+		currState = selectGreedyAction(currState); 
 		for (int i = 0; i < (int) weight_changes.size(); i++) {
-			double noisyGradient = reward(currState, prevState, features) + 
-				discount*estimateQ(currState, actions, features) - 
-				estimateQ(prevState, actions, features); // check which index to pass in
+			double noisyGradient = reward(currState, prevState) + 
+				discount*estimateQ(currState) - 
+				estimateQ(prevState); // check which index to pass in
 			noisyGradient *= learningRate;
 			
 			if (i == 0) // just add the gradient to the standalone weight
@@ -173,11 +182,11 @@ public:
 		return weight_changes; 
 	}
 
-	double estimateQ(StateInfo state, std::vector <double(*) (StateInfo)> actions, std::vector <double(*) (StateInfo)> features) {
+	double estimateQ(StateInfo state) { 
 		int actionInd = state.actionInd;
 		double estimate = this->weights.at(actionInd);
 		for (int i = 1; i < (int) this->weights.size(); i++) {
-			double ftr = features.at(2)(state);		//made feature constant as we just want DPS-HP ratio feature
+			double ftr = this->features.at(2)(state);		//made feature constant as we just want DPS-HP ratio feature
 			double wt = this->weights.at(actionInd);
 			estimate += wt * ftr;
 		}
@@ -187,19 +196,20 @@ public:
 	/*
 	Initialize an |actions|*(|features|+1) vector of the given value (1 by default).
 	*/
-	std::vector<double> initializeWeights(int numActions, int numFeatures, double val=1.0) {
+	std::vector<double> initializeWeights(double val=1.0) {
 		std::vector<double> weights;
-		for (int i = 0; i < numActions; i++) {
+		for (int i = 0; i < (int) this->actions.size(); i++) {
 			double newAction; // put this to a vector? How do we make this able to store multiple values
-			for (int j = 0; j < numFeatures + 1; j++)
+			for (int j = 0; j < (int) this->features.size() + 1; j++) {
 				newAction = val;
-			weights.push_back(newAction);
+				weights.push_back(newAction);
+			}
 		}
 		return weights;
 	}
 
 	// Reward := change in our total hitpoint lead
-	double reward(StateInfo currState, StateInfo prevState, std::vector <double(*) (StateInfo)> features)
+	double reward(StateInfo currState, StateInfo prevState)
 	{
 		// Current time step
 		double R_curr = getHPDiff(currState);
@@ -232,7 +242,9 @@ public:
 
 	private:
 		std::vector<double> weights;
+		std::vector<double(*) (StateInfo)> actions;
+		std::vector<double(*) (StateInfo)> features;
 		StateInfo currState;
 		StateInfo prevState;
-};
+};		
 #endif // !QLEARN
