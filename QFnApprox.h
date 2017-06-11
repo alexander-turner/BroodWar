@@ -41,11 +41,13 @@ public:
 		this->currState = state;
 		std::vector <StateInfo> orders; // set of commands executed each round
 		
+		//TODO: make 2d-vec compatible
 		if (filepath != "") {
-			std::ifstream input_file(filepath); // check that this works. also, expand for actions / features?
+			/*std::ifstream input_file(filepath); // check that this works. also, expand for actions / features?
 			double tempVar;
+
 			while (input_file >> tempVar)
-				this->weights.push_back(tempVar);
+				this->weights.push_back(tempVar);*/
 		}
 		else if (weights.size() == 0) {
 			this->weights = initializeWeights(); // Fill with ones (dim: |actions| x k+1)
@@ -79,7 +81,11 @@ public:
 			std::ofstream file;
 			file.open(filepath);
 			for (int i = 0; i < (int) weights.size(); i++)
-				file << weights.at(i);
+				for (int j = 0; j < weights[i].size(); j++)
+				{
+					file << weights[i][j];
+				}
+				
 			file.close();
 		}
 		return this->currState;
@@ -141,30 +147,36 @@ public:
 	For each order executed (specified via StateInfo), calculate and apply batched changes to weights.
 	*/
 	void batchUpdateWeights(std::vector <StateInfo> orders, std::vector <double(*) (StateInfo)> features, std::vector <double(*) (StateInfo)> actions) {
-		std::vector<double> weight_changes = initializeWeights(0);
+		std::vector < std::vector<double> > weight_changes = initializeWeights(0);
 		
 		// For each order
 		for (int i = 0; i < (int) orders.size(); i++) {
-			std::vector<double> temp_weight = updateWeights(this->currState, orders[i]); // prevOrders[i]?
-			for (int j = 0; j < (int) weight_changes.size(); j++)
-				weight_changes[j] += temp_weight[j];
+			std::vector< std::vector<double>> temp_weight = updateWeights(this->currState, orders[i]); // prevOrders[i]?
+			for (int j = 0; j < (int)weight_changes.size(); j++) {
+				for (int k = 0; k < (int) weight_changes[j].size(); k++)
+					weight_changes[j][k] += temp_weight[j][k];
+			}
 		}
 
 		for (int i = 0; i < (int) this->weights.size(); i++)
-			this->weights[i] += weight_changes[i];
+			for (int j = 0; j < weights[i].size(); j++)
+			{
+				this->weights[i][j] += weight_changes[i][j];
+			}
+			
 	}
 
 
 	/*
 	Perform TD update for each parameter after taking given action and return the changes.
 	*/
-	std::vector<double> updateWeights(StateInfo currState, StateInfo prevState) {
+	std::vector< std::vector<double>> updateWeights(StateInfo currState, StateInfo prevState) {
 		// constants
 		double learningRate = 0.01;
 		double discount = 0.9;
 
 		int actionInd = prevState.actionInd; 
-		std::vector<double> weight_changes = initializeWeights(0); 
+		std::vector<std::vector<double>>  weight_changes = initializeWeights(0);
 		
 		currState = selectGreedyAction(currState); 
 		for (int i = 0; i < (int) weight_changes.size(); i++) {
@@ -172,11 +184,12 @@ public:
 				discount*estimateQ(currState) - 
 				estimateQ(prevState); // check which index to pass in
 			noisyGradient *= learningRate;
-			
-			if (i == 0) // just add the gradient to the standalone weight
-				weight_changes.at(actionInd) = noisyGradient;
-			else  // multiply the feature by the gradient
-				weight_changes.at(actionInd) = noisyGradient*features.at(i)(prevState);
+			for (int j = 0; j < (int)weight_changes[i].size(); j++) {
+				if (j == 0) // just add the gradient to the standalone weight
+					weight_changes.at(i).at(actionInd) = noisyGradient;
+				else  // multiply the feature by the gradient
+					weight_changes.at(i).at(actionInd) = noisyGradient*features.at(i)(prevState);
+			}
 		}
 
 		return weight_changes; 
@@ -184,26 +197,26 @@ public:
 
 	double estimateQ(StateInfo state) { 
 		int actionInd = state.actionInd;
-		double estimate = this->weights.at(actionInd);
-		for (int i = 1; i < (int) this->weights.size(); i++) {
-			double ftr = this->features.at(2)(state);		//made feature constant as we just want DPS-HP ratio feature
-			double wt = this->weights.at(actionInd);
-			estimate += wt * ftr;
-		}
+
+		double estimate = (weights.at(0)).at(actionInd);
+		for (int i = 1; i < weights.size(); i++)
+			estimate += (weights.at(i)).at(actionInd) * features.at(i - 1)(state);
 		return estimate;
 	}
 
 	/*
 	Initialize an |actions|*(|features|+1) vector of the given value (1 by default).
 	*/
-	std::vector<double> initializeWeights(double val=1.0) {
-		std::vector<double> weights;
+	std::vector<std::vector<double>>  initializeWeights(double val=1.0) {
+		std::vector<std::vector<double>> weights;
 		for (int i = 0; i < (int) this->actions.size(); i++) {
-			double newAction; // put this to a vector? How do we make this able to store multiple values
+			std::vector<double> featureVec; // put this to a vector? How do we make this able to store multiple values
 			for (int j = 0; j < (int) this->features.size() + 1; j++) {
-				newAction = val;
-				weights.push_back(newAction);
+				
+				featureVec.push_back(val);
+				
 			}
+			weights.push_back(featureVec);
 		}
 		return weights;
 	}
@@ -241,7 +254,7 @@ public:
 	}
 
 	private:
-		std::vector<double> weights;
+		std::vector < std::vector <double> > weights;
 		std::vector<double(*) (StateInfo)> actions;
 		std::vector<double(*) (StateInfo)> features;
 		StateInfo currState;
