@@ -97,7 +97,7 @@ double getDPS(StateInfo state) {
 	int dmgamount = weapon.damageAmount();
 	int hits = u->getType().maxGroundHits();
 	int cd = u->getType().groundWeapon().damageCooldown();
-	int ticksPerSecond = 15;
+	double ticksPerSecond = 14.93; // normal game tickrate
 	double dmg = (((double) dmgamount * hits * ticksPerSecond) / cd);
 	return dmg;
 }
