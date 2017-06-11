@@ -61,7 +61,7 @@ public:
 	*/
 	void invoke_all(StateInfo state)
 	{
-		for (double i = 0; i < this->functionVector.size(); i++) {
+		for (int i = 0; i < (int) this->functionVector.size(); i++) {
 			this->functionVector.at(i)(state);
 		}
 	}
@@ -89,10 +89,11 @@ private:
 
 /*
 Functions to add - tried including these as member functions
-but it cause type errors
+but it caused type errors
 */
 double getDPS(StateInfo state) {
-
+	//Unit u = state.currentUnit;
+	//return ((double)u->getType().groundWeapon().damageAmount() * u->getType().maxGroundHits()) / u->getType().groundWeapon().damageCooldown();
 	double dmg = 6 / 15;
 	return dmg;
 }
@@ -112,9 +113,11 @@ double attackEnemy(StateInfo state) {
 
 	Unit u = state.currentUnit;
 	Unit e = state.target;
+
+	std::cout << u << "attacking" << e << std::endl;
 	u->attack(e);
 	//UnitCommand::attack(u, e);
-	std::cout << u << "attacking" << e << std::endl;
+	
 	//returns double so it can fit in double type vector of functions
 	return 1.0;
 }
