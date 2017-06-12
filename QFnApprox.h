@@ -37,20 +37,18 @@ public:
 
 		// update weights given the orders executed last time
 		if (this->prevState.currentUnit) {
-			batchUpdateWeights(this->orders);
+			//batchUpdateWeights(this->orders);
 		}
 
 		this->orders.clear(); // reset orders
 		this->prevState = this->currState;
-		for (auto &u : this->currState.friendlies) { // calculate action for each unit
-			if (!u->exists()) // need?
-				continue;
 
+		for (auto &u : this->currState.friendlies) { // calculate action for each unit
 			this->currState.currentUnit = u;
 			this->currState.actionInd = selectAction();
 			this->orders.push_back(this->currState);
 
-			actions.at(this->currState.actionInd)(this->currState); // execute action
+			//actions.at(this->currState.actionInd)(this->currState); // execute action
 		}
 
 		if (filepath != "") { // overwrite?

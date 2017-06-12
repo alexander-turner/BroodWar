@@ -56,7 +56,7 @@ public:
 
 	/*
 	method to invoke every function in the vector
-	can overload or change as we want
+	can overload or change as desired
 	*/
 	void invoke_all(StateInfo state)
 	{
@@ -87,10 +87,11 @@ private:
 };
 
 /* FEATURES */
+// diverges on its own
 double getTargetHP(StateInfo state) {
 	Unit u = state.target;
 	if (!u)
-		return 1.0;
+		return 0.0;
 	return u->getHitPoints();
 }
 
@@ -107,12 +108,15 @@ double getTargetDPS(StateInfo state) {
 	return dmg;
 }
 
+// diverges
 double getTargetDistance(StateInfo state) {
 	Unit u = state.currentUnit;
 	Unit e = state.target;
-	if (!u || !e)
-		return 1.0;
-	std::cout << u->getDistance(e) << std::endl;
+	if (!u || !e) 
+		return 40; // approximately range of marine?
+	
+	if (u->getDistance(e) > 10000) // getDistance not working right now
+		std::cout << u->getDistance(e) << std::endl;
 	return u->getDistance(e);
 }
 
@@ -128,7 +132,8 @@ double attackEnemy(StateInfo state) {
 	Unit u = state.currentUnit;
 	Unit e = state.target;
 
-	UnitCommand::attack(u, e);
+	if (u->canAttack(e)) // needed?
+		UnitCommand::attack(u, e);
 	
 	//returns double so it can fit in double type vector of functions
 	return 1.0;

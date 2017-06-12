@@ -43,35 +43,35 @@ int main(int argc, const char* argv[])
 	std::cout << "Connecting..." << std::endl;
 	reconnect();
 	while (true) {
-		for (int i = 0; i < n; i++) { // run n games
-			std::cout << "waiting to enter match" << std::endl;
-			while (!Broodwar->isInGame())
+		std::cout << "waiting to enter match" << std::endl;
+		while (!Broodwar->isInGame())
+		{
+			BWAPI::BWAPIClient.update();
+			if (!BWAPI::BWAPIClient.isConnected())
 			{
-				BWAPI::BWAPIClient.update();
-				if (!BWAPI::BWAPIClient.isConnected())
-				{
-					std::cout << "Reconnecting..." << std::endl;;
-					reconnect();
-				}
+				std::cout << "Reconnecting..." << std::endl;;
+				reconnect();
 			}
-			std::cout << "Starting match!" << std::endl;
-			// Enable some cheat flags
-			Broodwar->enableFlag(Flag::UserInput);
-			// Enables complete map information
-			Broodwar->enableFlag(Flag::CompleteMapInformation);
-		  
-			while (Broodwar->isInGame()) {
-				qfn.QFunctionApproximation(actionVector, featureVector);
-
-				BWAPI::BWAPIClient.update();
-				if (!BWAPI::BWAPIClient.isConnected()) {
-					std::cout << "Reconnecting..." << std::endl;
-					reconnect();
-				}
-			}
-			scores.push_back(qfn.getScore()); // Store score
-			outputResultsToCSV(scores);
 		}
+		std::cout << "Starting match!" << std::endl;
+		// Enable some cheat flags
+		Broodwar->enableFlag(Flag::UserInput);
+		// Enables complete map information
+		Broodwar->enableFlag(Flag::CompleteMapInformation);
+		  
+		while (Broodwar->isInGame()) {
+			qfn.QFunctionApproximation(actionVector, featureVector);
+
+			BWAPI::BWAPIClient.update();
+			if (!BWAPI::BWAPIClient.isConnected()) {
+				std::cout << "Reconnecting..." << std::endl;
+				reconnect();
+			}
+		}
+		scores.push_back(qfn.getScore()); // Store score
+		std::cout << qfn.getScore() << std::endl;
+		std::cout << scores.size() << std::endl;
+		outputResultsToCSV(scores, "autoattack.csv");
 	}
 
 	
