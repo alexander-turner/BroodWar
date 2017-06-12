@@ -18,6 +18,7 @@ struct StateInfo {
 };
 
 double getTargetHP(StateInfo state);
+double getTargetHPPercent(StateInfo state);
 double getTargetDPS(StateInfo state);
 double getNumberAttackingTarget(StateInfo state);
 double getTargetDistance(StateInfo state);
@@ -35,6 +36,10 @@ public:
 	constructor
 	*/
 	Functions() {
+		double(*getHP) (StateInfo state);
+		getHP = &getTargetHPPercent;
+		functionVector.push_back(getHP);
+
 		double(*DPStoHP) (StateInfo state);
 		DPStoHP = &getDPStoHPratio;
 		functionVector.push_back(DPStoHP);
@@ -96,6 +101,13 @@ double getTargetHP(StateInfo state) {
 	if (!u)
 		return 0.0;
 	return u->getHitPoints();
+}
+
+double getTargetHPPercent(StateInfo state) {
+	Unit u = state.target;
+	if (!u)
+		return 0.0;
+	return u->getHitPoints() / u->getInitialHitPoints();
 }
 
 double getTargetDPS(StateInfo state) {
