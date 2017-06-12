@@ -19,11 +19,14 @@ struct StateInfo {
 	
 };
 
+double getTargetHP(StateInfo state);
+double getTargetDPS(StateInfo state);
+double getTargetDistance(StateInfo statE);
 double getDPStoHPratio(StateInfo state);
-double getHP(StateInfo state);
-double getDPS(StateInfo state);
+
 double attackEnemy(StateInfo state);
 double moveToOrigin(StateInfo state);
+
 class Functions
 {
 public:
@@ -33,17 +36,13 @@ public:
 	constructor
 	*/
 	Functions() {
-		/*double(*getTargetHPF) (StateInfo state);
-		getTargetHP = &getTargetHP;
-		functionVector.push_back(getTargetHPF);
-
-		double(*getDPSF) (StateInfo state);
-		getDPSF = &getDPS;
-		functionVector.push_back(getDPSF);*/
-
 		double(*DPStoHP) (StateInfo state);
 		DPStoHP = &getDPStoHPratio;
 		functionVector.push_back(DPStoHP);
+
+		/*double(*distance) (StateInfo state);
+		distance = &getTargetDistance;
+		functionVector.push_back(distance);*/
 
 		double(*attackF) (StateInfo state);
 		attackF = &attackEnemy;
@@ -87,9 +86,7 @@ private:
 	std::vector <double(*) (StateInfo)> actionVector;
 };
 
-/*
-Functions to be added
-*/
+/* FEATURES */
 double getTargetHP(StateInfo state) {
 	Unit u = state.target;
 	if (!u)
@@ -110,12 +107,22 @@ double getTargetDPS(StateInfo state) {
 	return dmg;
 }
 
+double getTargetDistance(StateInfo state) {
+	Unit u = state.currentUnit;
+	Unit e = state.target;
+	if (!u || !e)
+		return 1.0;
+	std::cout << u->getDistance(e) << std::endl;
+	return u->getDistance(e);
+}
+
 double getDPStoHPratio(StateInfo state) {
 	if (!state.target)
 		return 0.0;
 	return getTargetDPS(state) / getTargetHP(state);
 }
 
+/* ACTIONS */
 double attackEnemy(StateInfo state) {
 
 	Unit u = state.currentUnit;

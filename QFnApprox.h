@@ -15,40 +15,35 @@ public:
 		prevState.currentUnit = NULL;
 	}
 
-	/* 
-	Paper: How to normalize rewards for bad situations? Granularity?
-
-	TODO: 
-	Run for arbitrary number of games - auto-restart
-	Optional: open / save weight file
-	*/
-
 	/* Given a starting state, a set of actions and features, run GQ and update the action-feature weights.
 	   weights has dimensions: |features|+1, |actions|. Optional filepath parameter allows for loading and saving weights.
 	*/
 	StateInfo QFunctionApproximation(std::vector<double(*)(StateInfo)> actions, std::vector<double(*)(StateInfo)> features, std::string filepath="") {
-		if (filepath != "") {
-			std::ifstream input_file(filepath); 
-			/*double tempVar;
-			while (input_file >> tempVar)
-				this->weights.push_back(tempVar);*/ // TODO: Make compatible with 2d-vec
-		}
-		else if (!this->prevState.currentUnit) {
+		if (!this->prevState.currentUnit) { // first call
 			this->actions = actions;
 			this->features = features;
-			this->weights = initializeWeights(); // Fill with ones (dim: |actions| x k+1)
+			if (filepath != "") {
+				std::ifstream input_file(filepath);
+				/*double tempVar;
+				while (input_file >> tempVar)
+				this->weights.push_back(tempVar);*/ // TODO: Make compatible with 2d-vec
+			} else {
+				this->weights = initializeWeights();
+			}
 		}
 
 		this->currState.friendlies = Broodwar->self()->getUnits();
 		this->currState.enemies = Broodwar->enemy()->getUnits();
 
 		// update weights given the orders executed last time
-		if (this->prevState.currentUnit)
+		if (this->prevState.currentUnit) {
 			batchUpdateWeights(this->orders);
+		}
+
 		this->orders.clear(); // reset orders
 		this->prevState = this->currState;
 		for (auto &u : this->currState.friendlies) { // calculate action for each unit
-			if (!u->exists())
+			if (!u->exists()) // need?
 				continue;
 
 			this->currState.currentUnit = u;
@@ -92,7 +87,6 @@ public:
 				action = rand() % (int) this->actions.size();
 				target = unitmapping[rand() % i];
 			}
-		//std::cout << "greedy action is: " << greedyAction << "| " << "action chosen is: " << action << std::endl;
 
 		this->currState.target = target;
 		return action;
@@ -135,7 +129,7 @@ public:
 		for (int i = 0; i < (int) orders.size(); i++) {
 			std::vector<std::vector<double>> temp_weight = updateWeights(this->currState, orders[i]); 
 			for (int j = 0; j < (int) weight_changes.size(); j++) {
-				weight_changes[j][orders[i].actionInd] += temp_weight[j][orders[i].actionInd]; // check this?
+				weight_changes[j][orders[i].actionInd] += temp_weight[j][orders[i].actionInd];
 				std::cout << temp_weight[j][orders[i].actionInd] << std::endl;
 			}
 		}
@@ -163,9 +157,7 @@ public:
 		for (int i = 0; i < (int) weight_changes.size(); i++) {
 			double noisyGradient = reward(currState, prevState) + 
 				discount*estimateQ(currState) - 
-				estimateQ(prevState); // this diverges
-			/*std::cout << "noisyGradient = " << reward(currState, prevState) << " + " << discount*estimateQ(currState)
-				<< " - " << estimateQ(prevState) << std::endl;*/
+				estimateQ(prevState);
 			noisyGradient *= learningRate;
 			std::cout << "Gradient: " << noisyGradient << std::endl;
 			
@@ -207,8 +199,7 @@ public:
 		// Previous time step
 		double R_prev = getHPDiff(prevState);
 
-		double reward = R_curr - R_prev;
-		return reward;
+		return R_curr - R_prev;
 	}
 
 	// Returns (total friendly HP - total enemy HP) for given state
