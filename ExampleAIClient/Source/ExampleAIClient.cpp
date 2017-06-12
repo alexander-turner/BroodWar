@@ -3,6 +3,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <fstream>
 #include <string>
 #include "../functionWrappers.h"
 #include "../QFnApprox.h"
@@ -21,14 +22,15 @@ void outputResultsToCSV(std::vector<double> results, std::string filepath = "") 
 	if (filepath == "")
 		filepath = "results.csv";
 
-	/*std::ofstream myfile;
-	myfile.open(filepath);
-	for (int i=0; results.size(); i++) {
-		myfile << results[i];
+	std::ofstream myfile(filepath, std::ofstream::out);
+	//myfile.open(filepath, std::ios::out);
+	for (int i=0; i < results.size(); i++) {
+		std::cout << "i = " << i << "results size = " << results.size() << std::endl;
+		myfile << results.at(i);
 		myfile << ",";
 	}
 	myfile << "\n";
-	myfile.close();*/
+	myfile.close();
 }
 
 int main(int argc, const char* argv[])
@@ -69,11 +71,11 @@ int main(int argc, const char* argv[])
 				}
 			}
 			scores.push_back(qfn.getScore()); // Store score
-			Broodwar->restartGame();
+			outputResultsToCSV(scores);
 		}
 	}
 
-	outputResultsToCSV(scores);
+	
 
 	std::cout << "Press ENTER to continue..." << std::endl;
 	std::cin.ignore();

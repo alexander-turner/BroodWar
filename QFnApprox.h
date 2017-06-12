@@ -20,7 +20,6 @@ public:
 
 	TODO: 
 	Run for arbitrary number of games - auto-restart
-	Output scores to CSV for analysis - DONE
 	Optional: open / save weight file
 	*/
 
