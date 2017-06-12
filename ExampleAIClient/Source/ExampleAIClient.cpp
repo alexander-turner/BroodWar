@@ -23,7 +23,6 @@ void outputResultsToCSV(std::vector<double> results, std::string filepath = "") 
 		filepath = "results.csv";
 
 	std::ofstream myfile(filepath, std::ofstream::out);
-	//myfile.open(filepath, std::ios::out);
 	for (int i=0; i < (int) results.size(); i++) {
 		myfile << results.at(i);
 		myfile << ",";
@@ -38,7 +37,6 @@ int main(int argc, const char* argv[])
 	QLearn qfn;
 	std::vector <double(*) (StateInfo)> actionVector = f.getActions(), featureVector = f.getFeatures();
 	std::vector <double> scores;
-	int n = 5; // how many times we want to run the game
 	  
 	std::cout << "Connecting..." << std::endl;
 	reconnect();
@@ -69,9 +67,7 @@ int main(int argc, const char* argv[])
 			}
 		}
 		scores.push_back(qfn.getScore()); // Store score
-		std::cout << qfn.getScore() << std::endl;
-		std::cout << scores.size() << std::endl;
-		outputResultsToCSV(scores, "autoattack.csv");
+		outputResultsToCSV(scores);
 	}
 
 	

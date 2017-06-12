@@ -22,33 +22,26 @@ public:
 		if (!this->prevState.currentUnit) { // first call
 			this->actions = actions;
 			this->features = features;
-			if (filepath != "") {
-				std::ifstream input_file(filepath);
-				/*double tempVar;
-				while (input_file >> tempVar)
-				this->weights.push_back(tempVar);*/ // TODO: Make compatible with 2d-vec
-			} else {
-				this->weights = initializeWeights();
-			}
+			this->weights = initializeWeights();
 		}
 
 		this->currState.friendlies = Broodwar->self()->getUnits();
 		this->currState.enemies = Broodwar->enemy()->getUnits();
 
 		// update weights given the orders executed last time
-		if (this->prevState.currentUnit) {
-			//batchUpdateWeights(this->orders);
-		}
+		if (this->prevState.currentUnit)
+			batchUpdateWeights(this->orders);
 
 		this->orders.clear(); // reset orders
 		this->prevState = this->currState;
+		this->currState.orderTargets.clear(); // reset targets
 
 		for (auto &u : this->currState.friendlies) { // calculate action for each unit
 			this->currState.currentUnit = u;
 			this->currState.actionInd = selectAction();
 			this->orders.push_back(this->currState);
 
-			//actions.at(this->currState.actionInd)(this->currState); // execute action
+			actions.at(this->currState.actionInd)(this->currState); // execute action
 		}
 
 		if (filepath != "") { // overwrite?
@@ -65,7 +58,6 @@ public:
 	Select an action index in a state using an e-greedy algorithm.
 	*/
 	int selectAction() {
-		double epsilon = 0.1; // probability of choosing non-greedy action
 		int greedyAction = selectGreedyAction();
 		Unit greedyTarget = this->currState.target;
 
@@ -78,7 +70,7 @@ public:
 
 		int action = greedyAction;
 		Unit target = greedyTarget;
-		if ((double) std::rand() / (RAND_MAX) <= epsilon)
+		if ((double) std::rand() / (RAND_MAX) <= this->epsilon)
 			while (action == greedyAction && 
 				(int) this->currState.enemies.size() > 1 && 
 				target == greedyTarget) {
@@ -87,6 +79,7 @@ public:
 			}
 
 		this->currState.target = target;
+		this->currState.orderTargets.push_back(target);
 		return action;
 	}
 
@@ -126,10 +119,8 @@ public:
 		// For each order
 		for (int i = 0; i < (int) orders.size(); i++) {
 			std::vector<std::vector<double>> temp_weight = updateWeights(this->currState, orders[i]); 
-			for (int j = 0; j < (int) weight_changes.size(); j++) {
+			for (int j = 0; j < (int) weight_changes.size(); j++)
 				weight_changes[j][orders[i].actionInd] += temp_weight[j][orders[i].actionInd];
-				std::cout << temp_weight[j][orders[i].actionInd] << std::endl;
-			}
 		}
 
 		for (int i = 0; i < (int) this->weights.size(); i++)
@@ -142,10 +133,6 @@ public:
 	Perform TD update for each parameter after taking given action and return the changes.
 	*/
 	std::vector<std::vector<double>> updateWeights(StateInfo currState, StateInfo prevState) {
-		// constants
-		double learningRate = 0.1; //0.0025?
-		double discount = 0.90;
-
 		int actionInd = prevState.actionInd; 
 		std::vector<std::vector<double>> weight_changes = initializeWeights(0); 
 		
@@ -154,9 +141,9 @@ public:
 		currState.actionInd = greedyAction;
 		for (int i = 0; i < (int) weight_changes.size(); i++) {
 			double noisyGradient = reward(currState, prevState) + 
-				discount*estimateQ(currState) - 
+				this->discount*estimateQ(currState) - 
 				estimateQ(prevState);
-			noisyGradient *= learningRate;
+			noisyGradient *= this->learningRate;
 			std::cout << "Gradient: " << noisyGradient << std::endl;
 			
 			if (i == 0) // just add the gradient to the standalone weight
@@ -189,14 +176,9 @@ public:
 	}
 
 	// Reward := change in our total hitpoint lead
-	double reward(StateInfo currState, StateInfo prevState)
-	{
-		// Current time step
+	double reward(StateInfo currState, StateInfo prevState) {
 		double R_curr = getHPDiff(currState);
-
-		// Previous time step
 		double R_prev = getHPDiff(prevState);
-
 		return R_curr - R_prev;
 	}
 
@@ -233,5 +215,8 @@ public:
 		std::vector <StateInfo> orders;
 		StateInfo currState;
 		StateInfo prevState;
+		double epsilon = 0.1; // probability of choosing non-greedy action
+		double learningRate = 0.01; //0.0025?
+		double discount = 0.9;
 };
 #endif // !QLEARN

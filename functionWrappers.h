@@ -13,15 +13,14 @@ struct StateInfo {
 	Unit target;
 	Unitset friendlies;
 	Unitset enemies;
+	std::vector <Unit> orderTargets;
 	int actionInd; // which action has been chosen for currentUnit, target
-	std::unordered_map<Unit, int> friendlyHP;
-	std::unordered_map<Unit, int> enemyHP;
-	
 };
 
 double getTargetHP(StateInfo state);
 double getTargetDPS(StateInfo state);
-double getTargetDistance(StateInfo statE);
+double getNumberAttackingTarget(StateInfo state);
+double getTargetDistance(StateInfo state);
 double getDPStoHPratio(StateInfo state);
 
 double attackEnemy(StateInfo state);
@@ -39,6 +38,10 @@ public:
 		double(*DPStoHP) (StateInfo state);
 		DPStoHP = &getDPStoHPratio;
 		functionVector.push_back(DPStoHP);
+
+		double(*numAtk) (StateInfo state);
+		numAtk = &getNumberAttackingTarget;
+		functionVector.push_back(numAtk);
 
 		/*double(*distance) (StateInfo state);
 		distance = &getTargetDistance;
@@ -108,6 +111,21 @@ double getTargetDPS(StateInfo state) {
 	return dmg;
 }
 
+// Returns what percentage of friendly units are currently attacking the target
+double getNumberAttackingTarget(StateInfo state) {
+	double numberAttacking = 0;
+	Unit u = state.target;
+	if (u) {
+		for (auto &target : state.orderTargets)
+			if (target == u)
+				numberAttacking += 1;
+		if (state.friendlies.size() > 0)
+			numberAttacking /= state.friendlies.size(); // divides by total number, max feature value is total-1/total
+	}
+
+	return numberAttacking;
+}
+
 // diverges
 double getTargetDistance(StateInfo state) {
 	Unit u = state.currentUnit;
@@ -120,6 +138,7 @@ double getTargetDistance(StateInfo state) {
 	return u->getDistance(e);
 }
 
+// converges
 double getDPStoHPratio(StateInfo state) {
 	if (!state.target)
 		return 0.0;
@@ -132,7 +151,7 @@ double attackEnemy(StateInfo state) {
 	Unit u = state.currentUnit;
 	Unit e = state.target;
 
-	if (u->canAttack(e)) // needed?
+	if (u->canAttack(e))
 		UnitCommand::attack(u, e);
 	
 	//returns double so it can fit in double type vector of functions
