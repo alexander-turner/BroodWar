@@ -33,13 +33,13 @@ public:
 	constructor
 	*/
 	Functions() {
-		double(*getHPF) (StateInfo state);
-		getHPF = &getHP;
-		functionVector.push_back(getHPF);
+		/*double(*getTargetHPF) (StateInfo state);
+		getTargetHP = &getTargetHP;
+		functionVector.push_back(getTargetHPF);
 
 		double(*getDPSF) (StateInfo state);
 		getDPSF = &getDPS;
-		functionVector.push_back(getDPSF);
+		functionVector.push_back(getDPSF);*/
 
 		double(*DPStoHP) (StateInfo state);
 		DPStoHP = &getDPStoHPratio;
@@ -90,8 +90,17 @@ private:
 /*
 Functions to be added
 */
-double getDPS(StateInfo state) {
-	Unit u = state.currentUnit;
+double getTargetHP(StateInfo state) {
+	Unit u = state.target;
+	if (!u)
+		return 1.0;
+	return u->getHitPoints();
+}
+
+double getTargetDPS(StateInfo state) {
+	Unit u = state.target;
+	if (!u)
+		return 0.0;
 	WeaponType weapon = u->getType().groundWeapon();
 	int dmgamount = weapon.damageAmount();
 	int hits = u->getType().maxGroundHits();
@@ -101,14 +110,10 @@ double getDPS(StateInfo state) {
 	return dmg;
 }
 
-double getHP(StateInfo state) {
-	Unit u = state.currentUnit;
-	return u->getHitPoints();
-}
-
 double getDPStoHPratio(StateInfo state) {
-	Unit u = state.currentUnit;
-	return getDPS(state) / u->getHitPoints();
+	if (!state.target)
+		return 0.0;
+	return getTargetDPS(state) / getTargetHP(state);
 }
 
 double attackEnemy(StateInfo state) {

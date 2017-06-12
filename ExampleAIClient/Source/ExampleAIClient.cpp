@@ -24,8 +24,7 @@ void outputResultsToCSV(std::vector<double> results, std::string filepath = "") 
 
 	std::ofstream myfile(filepath, std::ofstream::out);
 	//myfile.open(filepath, std::ios::out);
-	for (int i=0; i < results.size(); i++) {
-		std::cout << "i = " << i << "results size = " << results.size() << std::endl;
+	for (int i=0; i < (int) results.size(); i++) {
 		myfile << results.at(i);
 		myfile << ",";
 	}

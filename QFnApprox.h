@@ -72,7 +72,7 @@ public:
 	Select an action index in a state using an e-greedy algorithm.
 	*/
 	int selectAction() {
-		double epsilon = 0.5; // probability of choosing non-greedy action
+		double epsilon = 0.1; // probability of choosing non-greedy action
 		int greedyAction = selectGreedyAction();
 		Unit greedyTarget = this->currState.target;
 
@@ -134,8 +134,10 @@ public:
 		// For each order
 		for (int i = 0; i < (int) orders.size(); i++) {
 			std::vector<std::vector<double>> temp_weight = updateWeights(this->currState, orders[i]); 
-			for (int j = 0; j < (int) weight_changes.size(); j++)
+			for (int j = 0; j < (int) weight_changes.size(); j++) {
 				weight_changes[j][orders[i].actionInd] += temp_weight[j][orders[i].actionInd]; // check this?
+				std::cout << temp_weight[j][orders[i].actionInd] << std::endl;
+			}
 		}
 
 		for (int i = 0; i < (int) this->weights.size(); i++)
@@ -149,7 +151,7 @@ public:
 	*/
 	std::vector<std::vector<double>> updateWeights(StateInfo currState, StateInfo prevState) {
 		// constants
-		double learningRate = 0.01;
+		double learningRate = 0.1; //0.0025?
 		double discount = 0.90;
 
 		int actionInd = prevState.actionInd; 
