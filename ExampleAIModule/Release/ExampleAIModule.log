@@ -1,8 +1,0 @@
-﻿  Dll.cpp
-  ExampleAIModule.cpp
-     Création de la bibliothèque Release\ExampleAIModule.lib et de l'objet Release\ExampleAIModule.exp
-  Génération de code en cours
-  All 4204 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
-  Fin de la génération du code
-  ExampleAIModule.vcxproj -> F:\Program Files\BWAPI\Release\ExampleAIModule.dll
-  ExampleAIModule.vcxproj -> F:\Program Files\BWAPI\Release\ExampleAIModule.pdb (Full PDB)
