@@ -1,4 +1,0 @@
-﻿  ExampleAIClient.cpp
-Source\ExampleAIClient.cpp(79): warning C4305: 'argument' : troncation de 'BWAPI::UnitTypes::Enum::Enum' à 'bool'
-  ExampleAIClient.vcxproj -> F:\Program Files\BWAPI\Debug\ExampleAIClient.exe
-  ExampleAIClient.vcxproj -> F:\Program Files\BWAPI\Debug\ExampleAIClient.pdb (Full PDB)
