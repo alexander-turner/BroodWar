@@ -6,7 +6,7 @@ This implementation allows for state-action approximation via features. Features
 
 ## Installation
 
-First, follow the [instructions for installing StarCraft: The Brood War and BWAPI](https://bwapi.github.io/). Then simply copy this directory into the BWAPI folder (allowing overwrite). Lastly, copy the included map (`.scm`) into StarCraft's Maps directory.
+First, follow the [instructions for installing StarCraft: The Brood War and BWAPI](https://bwapi.github.io/). Then simply copy this directory into the BWAPI folder (allowing overwrite). Lastly, copy the included map file (`.scm`) into StarCraft's Maps directory.
 
 ## Legal {#legal}
 [Starcraft](http://www.blizzard.com/games/sc/) and [Starcraft: Broodwar](http://www.blizzard.com/games/sc/) are trademarks of
