@@ -1,7 +1,5 @@
 # Q-Function Approximation in StarCraft: The Brood War
 
-## Summary
-
 This implementation allows for state-action approximation via features. Features and actions may be dynamically added via the `functionWrappers.h` file.
 
 ## Installation
