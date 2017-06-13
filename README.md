@@ -1,4 +1,4 @@
-# Q-Function Approximation in StarCraft: The Brood War {#BWAPI}
+# Q-Function Approximation in StarCraft: The Brood War
 
 ## Summary
 
