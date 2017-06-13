@@ -58,6 +58,8 @@ int main(int argc, const char* argv[])
 		Broodwar->enableFlag(Flag::CompleteMapInformation);
 		  
 		while (Broodwar->isInGame()) {
+			//Broodwar->setLocalSpeed(0); // uncomment to speed simulation
+
 			qfn.QFunctionApproximation(actionVector, featureVector);
 
 			BWAPI::BWAPIClient.update();
@@ -69,8 +71,6 @@ int main(int argc, const char* argv[])
 		scores.push_back(qfn.getScore()); // Store score
 		outputResultsToCSV(scores);
 	}
-
-	
 
 	std::cout << "Press ENTER to continue..." << std::endl;
 	std::cin.ignore();

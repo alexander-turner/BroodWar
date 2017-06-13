@@ -1,3 +1,20 @@
+/*
+This file is part of BWAPI.
+
+BWAPI is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+BWAPI is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with BWAPI.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #ifndef QLEARN
 #define QLEARN
 #include <vector>
@@ -206,7 +223,7 @@ public:
 		StateInfo currState;
 		StateInfo prevState;
 		double epsilon = 0.1; // probability of choosing non-greedy action
-		double learningRate = 0.5; 
+		double learningRate = 0.1; 
 		double discount = 0.9;
 };
 #endif // !QLEARN
