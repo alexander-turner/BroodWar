@@ -1,8 +1,0 @@
-﻿La génération a démarré 16/05/2017 14:07:03.
-     1>Projet "F:\Program Files\BWAPI\ExampleAIModule\ExampleAIModule.vcxproj" sur le nœud 2 (Build cible(s)).
-     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.Cpp.Platform.targets(64,5): error MSB8020: The build tools for v141 (Platform Toolset = 'v141') cannot be found. To build using the v141 build tools, please install v141 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Upgrade Solution...".
-     1>Génération du projet "F:\Program Files\BWAPI\ExampleAIModule\ExampleAIModule.vcxproj" terminée (Build cible(s)) -- ÉCHEC.
-
-ÉCHEC de la build.
-
-Temps écoulé 00:00:00.08
