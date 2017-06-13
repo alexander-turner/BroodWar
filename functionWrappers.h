@@ -14,7 +14,7 @@ struct StateInfo {
 	Unitset friendlies;
 	Unitset enemies;
 	std::vector <Unit> orderTargets;
-	int actionInd; // which action has been chosen for currentUnit, target
+	int actionInd; // which action has been chosen
 };
 
 double getTargetHP(StateInfo state);
@@ -163,8 +163,7 @@ double attackEnemy(StateInfo state) {
 	Unit u = state.currentUnit;
 	Unit e = state.target;
 
-	if (u->canAttack(e))
-		UnitCommand::attack(u, e);
+	UnitCommand::attack(u, e);
 	
 	//returns double so it can fit in double type vector of functions
 	return 1.0;

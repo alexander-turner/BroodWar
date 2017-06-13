@@ -10,15 +10,14 @@ using namespace BWAPI;
 class QLearn
 {
 public:
-	QLearn()
-	{
+	QLearn() {
 		prevState.currentUnit = NULL;
 	}
 
-	/* Given a starting state, a set of actions and features, run GQ and update the action-feature weights.
-	   weights has dimensions: |features|+1, |actions|. Optional filepath parameter allows for loading and saving weights.
+	/* Given a starting state, a set of actions and features, take action, calculate gradients, and update the action-feature weights.
+	   weights is of dimensions |features|+1 x |actions|. 
 	*/
-	StateInfo QFunctionApproximation(std::vector<double(*)(StateInfo)> actions, std::vector<double(*)(StateInfo)> features, std::string filepath="") {
+	StateInfo QFunctionApproximation(std::vector<double(*)(StateInfo)> actions, std::vector<double(*)(StateInfo)> features) {
 		if (!this->prevState.currentUnit) { // first call
 			this->actions = actions;
 			this->features = features;
@@ -44,14 +43,6 @@ public:
 			actions.at(this->currState.actionInd)(this->currState); // execute action
 		}
 
-		if (filepath != "") { // overwrite?
-			std::ofstream file;
-			file.open(filepath);
-			for (int i = 0; i < (int) this->weights.size(); i++)
-				for (int j = 0; j < (int) this->weights[i].size(); j++)
-					file << this->weights[i][j];
-			file.close();
-		}
 		return this->currState;
 	}
 	/*
@@ -73,7 +64,7 @@ public:
 		if ((double) std::rand() / (RAND_MAX) <= this->epsilon)
 			while (action == greedyAction && 
 				(int) this->currState.enemies.size() > 1 && 
-				target == greedyTarget) {
+				target == greedyTarget) { // select a new action-target pair
 				action = rand() % (int) this->actions.size();
 				target = unitmapping[rand() % i];
 			}
@@ -144,8 +135,7 @@ public:
 				this->discount*estimateQ(currState) - 
 				estimateQ(prevState);
 			noisyGradient *= this->learningRate;
-			std::cout << "Gradient: " << noisyGradient << std::endl;
-			
+
 			if (i == 0) // just add the gradient to the standalone weight
 				weight_changes.at(i).at(actionInd) = noisyGradient;
 			else  // multiply the feature by the gradient
@@ -216,7 +206,7 @@ public:
 		StateInfo currState;
 		StateInfo prevState;
 		double epsilon = 0.1; // probability of choosing non-greedy action
-		double learningRate = 0.01; //0.0025?
+		double learningRate = 0.5; 
 		double discount = 0.9;
 };
 #endif // !QLEARN
